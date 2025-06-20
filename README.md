@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Doover Application Template
 
 This repository serves as a template for creating Doover applications.
@@ -79,6 +78,3 @@ To create your own Doover application:
 1. Modify the application logic in the appropriate directory.
 2. Update the simulator and test configurations as needed.
 3. Adjust deployment configurations to suit your requirements.
-=======
-# opcua-reader
->>>>>>> 38df45e4eb9c93328597654901cd4f61ca5e6b00

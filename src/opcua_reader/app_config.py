@@ -13,21 +13,21 @@ class OpcuaReaderConfig(config.Schema):
             description="The IP address of the OPC UA server",
         )
 
-        # self.num_di = config.Integer(
-        #     "Digital Input Count",
-        #     default=config.Variable("device", "digitalInputCount"),
-        #     minimum=0,
-        # )
-        # self.num_do = config.Integer(
-        #     "Digital Output Count",
-        #     default=config.Variable("device", "digitalOutputCount"),
-        #     minimum=0,
-        # )
+        self.num_di = config.Integer(
+            "Digital Input Count",
+            default=config.Variable("device", "digitalInputCount"),
+            minimum=0,
+        )
+        self.num_do = config.Integer(
+            "Digital Output Count",
+            default=config.Variable("device", "digitalOutputCount"),
+            minimum=0,
+        )
 
-        # self.outputs_enabled = config.Boolean("Digital Outputs Enabled", default=True)
-        # self.funny_message = config.String("A Funny Message")  # this will be required as no default given.
+        self.outputs_enabled = config.Boolean("Digital Outputs Enabled", default=True)
+        self.funny_message = config.String("A Funny Message")  # this will be required as no default given.
 
-        # self.sim_app_key = config.Application("Simulator App Key", description="The app key for the simulator")
+        self.sim_app_key = config.Application("Simulator App Key", description="The app key for the simulator")
 
 
 if __name__ == "__main__":
