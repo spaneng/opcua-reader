@@ -18,49 +18,21 @@
             "title": "Application Config",
             "type": "object",
             "properties": {
-                "digital_input_count": {
-                    "title": "Digital Input Count",
-                    "x-name": "digital_input_count",
-                    "x-hidden": false,
-                    "type": "integer",
-                    "default": "$device.digitalinputcount",
-                    "minimum": 0
-                },
-                "digital_output_count": {
-                    "title": "Digital Output Count",
-                    "x-name": "digital_output_count",
-                    "x-hidden": false,
-                    "type": "integer",
-                    "default": "$device.digitaloutputcount",
-                    "minimum": 0
-                },
-                "digital_outputs_enabled": {
-                    "title": "Digital Outputs Enabled",
-                    "x-name": "digital_outputs_enabled",
-                    "x-hidden": false,
-                    "type": "boolean",
-                    "default": true
-                },
-                "a_funny_message": {
-                    "title": "A Funny Message",
-                    "x-name": "a_funny_message",
-                    "x-hidden": false,
-                    "type": "string"
-                },
-                "simulator_app_key": {
-                    "format": "doover-application",
-                    "title": "Simulator App Key",
-                    "x-name": "simulator_app_key",
+                "ip_address": {
+                    "title": "IP Address",
+                    "x-name": "ip_address",
                     "x-hidden": false,
                     "type": "string",
-                    "description": "The app key for the simulator"
+                    "description": "The IP address of the OPC UA server"
                 }
             },
             "additionalElements": true,
             "required": [
-                "a_funny_message",
-                "simulator_app_key"
+                "ip_address"
             ]
-        }
+        },
+        "key": "b9a0e028-4868-4142-86f2-df41fedf39e5",
+        "repo_branch": "main",
+        "staging_config": {}
     }
 }
