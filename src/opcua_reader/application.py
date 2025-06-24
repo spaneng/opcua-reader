@@ -1,6 +1,8 @@
 import logging
 import time
+import asyncio
 
+from asyncua import Client
 from pydoover.docker import Application
 from pydoover import ui
 
@@ -18,40 +20,63 @@ class OpcuaReaderApplication(Application):
 
         self.started = time.time()
         self.ui = OpcuaReaderUI()
-        self.state = OpcuaReaderState()
+        # self.state = OpcuaReaderState()
 
+        self.server_uri = self.config.opcua_uri.value
+        self.vars = self.config.opcua_values.elements
+
+        self.client = Client(self.server_uri)
+        
     async def setup(self):
         self.ui_manager.add_children(*self.ui.fetch())
 
     async def main_loop(self):
-        log.info(f"State is: {self.state.state}")
+        # log.info(f"State is: {self.state.state}")
+        server_vals = await self.get_server_values()
+        if server_vals:
+            log.info("Server values fetched successfully.")
+            await self.update_ui(server_vals)
+        else:
+            log.error("Failed to fetch server values.")
+        asyncio.sleep(5)
 
-        # a random value we set inside our simulator. Go check it out in simulators/sample!
-        # random_value = self.get_tag("random_value", self.config.sim_app_key.value)
-        # log.info("Random value from simulator: %s", random_value)
+    async def get_server_values(self):
+        res = []
+        if self.ua_uri is None:
+            log.error("No OPC UA URI provided in the configuration.")
+            return
+        
+        async with Client(url=self.ua_uri) as client:
+            log.info("Connected to OPC UA Server at %s", self.ua_uri)
 
-        print(self.config)
+            objects = client.nodes.objects
+            log.info("Objects node is: %r", objects)
 
-        print(self.config.__dict__)
-
-        self.ui.update(
-            True,
-            5,
-            time.time() - self.started,
-        )
-
-    @ui.callback("send_alert")
-    async def on_send_alert(self, new_value):
-        log.info(f"Sending alert: {self.ui.test_output.current_value}")
-        await self.publish_to_channel("significantAlerts", self.ui.test_output.current_value)
-        self.ui.send_alert.coerce(None)
-
-    @ui.callback("test_message")
-    async def on_text_parameter_change(self, new_value):
-        log.info(f"New value for test message: {new_value}")
-        # Set the value as an output to the corresponding variable is this case
-        self.ui.test_output.update(new_value)
-
-    @ui.callback("charge_mode")
-    async def on_state_command(self, new_value):
-        log.info(f"New value for state command: {new_value}")
+            for var in self.config.read_values.elements:
+                nsidx = var.name_space_index.value
+                var_name = var.variable_name.value
+                try:
+                    _variable = await objects.get_child([f"{nsidx}:{var_name}"])  
+                    value = await _variable.read_value()
+                    log.info("Value of MyVariable: %s", value)
+                except Exception as e:
+                    log.error("Error reading variable: %s", e)
+                    value = None
+                res.append({
+                    "nsidx": nsidx,
+                    "var_name": var_name,
+                    "value": value
+                })
+                
+        return res
+    
+    async def update_ui(self, values):
+        for value in values:
+            nsidx = value["nsidx"]
+            var_name = value["var_name"]
+            ui_var = getattr(self.ui, f"{nsidx}_{var_name}", None)
+            if ui_var:
+                log.info(f"Updating UI variable {ui_var.name} with value {value['value']}")
+                ui_var.update(value["value"])
+            else:
+                log.warning(f"UI variable {nsidx}_{var_name} not found")

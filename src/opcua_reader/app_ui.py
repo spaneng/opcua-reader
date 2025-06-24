@@ -2,7 +2,14 @@ from pydoover import ui
 
 
 class OpcuaReaderUI:
-    def __init__(self):
+    def __init__(self, config):
+        self._config = config
+
+        self.get_ui_from_config()
+
+
+
+
         self.is_working = ui.BooleanVariable("is_working", "We Working?")
         self.uptime = ui.DateTimeVariable("uptime", "Started")
 
@@ -27,9 +34,32 @@ class OpcuaReaderUI:
         ])
         self.battery.add_children(self.battery_voltage, self.battery_low_voltage_alert, self.battery_charge_mode)
 
-    def fetch(self):
-        return self.is_working, self.uptime, self.send_alert, self.text_parameter, self.test_output, self.battery
+    def get_ui_from_config(self):
+        for var in self._config.read_values.elements:
+            nsidx = var.name_space_index.value
+            var_name = var.variable_name.value
+            data_type = var.data_type.value
 
+            match data_type:
+                case "Int":
+                    ui_var = ui.NumericVariable(f"{nsidx}_{var_name}", f"{var_name} (Int)", precision=0)
+                case "Float":
+                    ui_var = ui.NumericVariable(f"{nsidx}_{var_name}", f"{var_name} (Float)", precision=2)
+                case "String":
+                    ui_var = ui.TextVariable(f"{nsidx}_{var_name}", f"{var_name} (String)")
+                case "Boolean":
+                    ui_var = ui.BooleanVariable(f"{nsidx}_{var_name}", f"{var_name} (Boolean)")
+                case _:
+                    raise ValueError(f"Unsupported data type: {data_type}")
+            setattr(self, f"{nsidx}_{var_name}", ui_var)
+
+    def fetch(self):
+        ui_elements = []
+        for attr in dir(self):
+            if not attr.startswith("_") and not callable(getattr(self, attr)):
+                ui_elements.append(getattr(self, attr))
+        return ui_elements
+    
     def update(self, is_working, voltage, uptime):
         self.is_working.update(is_working)
         self.uptime.update(uptime)

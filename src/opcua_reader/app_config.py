@@ -5,29 +5,33 @@ from pydoover import config
 
 class OpcuaReaderConfig(config.Schema):
     def __init__(self):
-        # these 2 are device specific, and inherit from the device-set variables.
-        # However, the user can override them if they wish.
 
-        self.ip_address = config.String(
-            "IP Address",
-            description="The IP address of the OPC UA server",
+        self.opcua_uri = config.String(
+            "OPCUA Address",
+            description="OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/",
         )
 
-        self.num_di = config.Integer(
-            "Digital Input Count",
-            default=config.Variable("device", "digitalInputCount"),
-            minimum=0,
-        )
-        self.num_do = config.Integer(
-            "Digital Output Count",
-            default=config.Variable("device", "digitalOutputCount"),
-            minimum=0,
+        opcua_node_elems = config.Object("OPCUA Variable")
+        opcua_node_elems.add_elements(
+            config.String("Name Space Index", 
+                          description="Name Space Index of the OPC UA variable"),
+            config.String("Variable Name",
+                          description="Name of the OPC UA variable to read"),
+            config.Enum(
+                "Data Type",
+                description="Data type of the OPC UA variable",
+                choices=[
+                    "Int",
+                    "Float",
+                    "String",
+                    "Boolean",
+                ]
+            )
         )
 
-        self.outputs_enabled = config.Boolean("Digital Outputs Enabled", default=True)
-        self.funny_message = config.String("A Funny Message")  # this will be required as no default given.
+        self.opcua_values = config.Array("OPCUA Server Values", element=opcua_node_elems)
 
-        self.sim_app_key = config.Application("Simulator App Key", description="The app key for the simulator")
+        # self.sim_app_key = config.Application("Simulator App Key", description="The app key for the simulator")
 
 
 if __name__ == "__main__":
