@@ -55,8 +55,11 @@ class OpcuaReaderApplication(Application):
             for var in self.config.read_values.elements:
                 nsidx = var.name_space_index.value
                 var_name = var.variable_name.value
+                snsr_name = var.sensor_object_name.value
+
+                sensor_obj = await objects.get_child([f"{nsidx}:{snsr_name}"])
                 try:
-                    _variable = await objects.get_child([f"{nsidx}:{var_name}"])  
+                    _variable = await sensor_obj.get_child([f"{nsidx}:{var_name}"])  
                     value = await _variable.read_value()
                     log.info("Value of MyVariable: %s", value)
                 except Exception as e:

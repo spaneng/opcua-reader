@@ -17,6 +17,8 @@ class OpcuaReaderConfig(config.Schema):
                           description="Name Space Index of the OPC UA variable"),
             config.String("Variable Name",
                           description="Name of the OPC UA variable to read"),
+            config.String("Sensor Object Name",
+                          description="Name of the sensor object in the OPC UA server"),
             config.Enum(
                 "Data Type",
                 description="Data type of the OPC UA variable",
