@@ -50,6 +50,13 @@
                                 "type": "string",
                                 "description": "Name of the OPC UA variable to read"
                             },
+                            "sensor_object_name": {
+                                "title": "Sensor Object Name",
+                                "x-name": "sensor_object_name",
+                                "x-hidden": false,
+                                "type": "string",
+                                "description": "Name of the sensor object in the OPC UA server"
+                            },
                             "data_type": {
                                 "enum": [
                                     "Int",
@@ -62,12 +69,21 @@
                                 "x-hidden": false,
                                 "type": "string",
                                 "description": "Data type of the OPC UA variable"
+                            },
+                            "units": {
+                                "title": "Units",
+                                "x-name": "units",
+                                "x-hidden": false,
+                                "type": "string",
+                                "description": "Unit of the OPC UA variable, e.g. '\u00b0C', 'V', 'm/s', etc",
+                                "default": ""
                             }
                         },
                         "additionalElements": false,
                         "required": [
                             "name_space_index",
                             "variable_name",
+                            "sensor_object_name",
                             "data_type"
                         ]
                     }
