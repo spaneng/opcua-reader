@@ -77,6 +77,60 @@
                                 "type": "string",
                                 "description": "Unit of the OPC UA variable, e.g. '\u00b0C', 'V', 'm/s', etc",
                                 "default": ""
+                            },
+                            "alarms": {
+                                "title": "Alarms",
+                                "x-name": "alarms",
+                                "x-hidden": false,
+                                "type": "array",
+                                "description": "Alarms associated with this OPC UA variable",
+                                "items": {
+                                    "title": "Alarms",
+                                    "x-name": "alarms",
+                                    "x-hidden": false,
+                                    "type": "object",
+                                    "properties": {
+                                        "alarm_name": {
+                                            "title": "Alarm Name",
+                                            "x-name": "alarm_name",
+                                            "x-hidden": false,
+                                            "type": "string",
+                                            "description": "Name of the alarm"
+                                        },
+                                        "high/low_alarm": {
+                                            "enum": [
+                                                "High",
+                                                "Low"
+                                            ],
+                                            "title": "High/Low Alarm",
+                                            "x-name": "high/low_alarm",
+                                            "x-hidden": false,
+                                            "type": "string",
+                                            "description": "Severity level of the alarm"
+                                        },
+                                        "minimum_alarm_value": {
+                                            "title": "Minimum Alarm Value",
+                                            "x-name": "minimum_alarm_value",
+                                            "x-hidden": false,
+                                            "type": "number",
+                                            "description": "Minimum value for the alarm to trigger",
+                                            "default": 0.0
+                                        },
+                                        "maximum_alarm_value": {
+                                            "title": "Maximum Alarm Value",
+                                            "x-name": "maximum_alarm_value",
+                                            "x-hidden": false,
+                                            "type": "number",
+                                            "description": "Maximum value for the alarm to trigger",
+                                            "default": 100.0
+                                        }
+                                    },
+                                    "additionalElements": false,
+                                    "required": [
+                                        "alarm_name",
+                                        "high/low_alarm"
+                                    ]
+                                }
                             }
                         },
                         "additionalElements": false,
@@ -84,7 +138,8 @@
                             "name_space_index",
                             "variable_name",
                             "sensor_object_name",
-                            "data_type"
+                            "data_type",
+                            "alarms"
                         ]
                     }
                 }

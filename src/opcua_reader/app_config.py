@@ -19,12 +19,14 @@ class Alarm(config.Object):
 
         self.min_alarm = config.Number(
             "Minimum Alarm Value",
-            description="Minimum value for the alarm to trigger"
+            description="Minimum value for the alarm to trigger",
+            default=0.0,
         )
         
         self.max_alarm = config.Number(
             "Maximum Alarm Value",
-            description="Maximum value for the alarm to trigger"
+            description="Maximum value for the alarm to trigger",
+            default=100.0
         )
 
 class OPCUAVariable(config.Object):

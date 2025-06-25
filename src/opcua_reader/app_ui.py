@@ -38,6 +38,7 @@ class OpcuaReaderUI:
 
             # create alarm UI
             lalm = len(var.alarms.elements)
+            alm_elem = None
             if lalm == 1:
                 alm = var.alarms.elements[0]
                 alm_name = alm.name.value
@@ -74,10 +75,9 @@ class OpcuaReaderUI:
                     f"{display_name}",
                     children=sliders
                 )
-            
-                
-            setattr(self, f"{nsidx}_{var_name}_alm_slider", alm_elem)
-            alarm_elems.append(getattr(self, f"{nsidx}_{var_name}_alm_slider"))
+            if alm_elem is not None:
+                setattr(self, f"{nsidx}_{var_name}_alm", alm_elem)
+                alarm_elems.append(getattr(self, f"{nsidx}_{var_name}_alm_slider"))
 
         if len(alarm_elems) > 0:
             self.alarms = ui.Submodule(
