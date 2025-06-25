@@ -28,7 +28,11 @@ class OpcuaReaderConfig(config.Schema):
                     "String",
                     "Boolean",
                 ]
-            )
+            ),
+            config.String(
+                "Unit",
+                description="Unit of the OPC UA variable, e.g. '°C', 'V', 'm/s', etc",
+            ),
         )
 
         self.opcua_values = config.Array("OPCUA Server Values", element=opcua_node_elems)

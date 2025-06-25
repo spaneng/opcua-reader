@@ -39,16 +39,20 @@ class OpcuaReaderUI:
             nsidx = var.name_space_index.value
             var_name = var.variable_name.value
             data_type = var.data_type.value
+            units = var.units.value
+            if units:
+                var_name = f"{var_name} ({units})"
+
 
             match data_type:
                 case "Int":
-                    ui_var = ui.NumericVariable(f"{nsidx}_{var_name}", f"{var_name} (Int)", precision=0)
+                    ui_var = ui.NumericVariable(f"{nsidx}_{var_name}", var_name, precision=0)
                 case "Float":
-                    ui_var = ui.NumericVariable(f"{nsidx}_{var_name}", f"{var_name} (Float)", precision=2)
+                    ui_var = ui.NumericVariable(f"{nsidx}_{var_name}", var_name, precision=2)
                 case "String":
-                    ui_var = ui.TextVariable(f"{nsidx}_{var_name}", f"{var_name} (String)")
+                    ui_var = ui.TextVariable(f"{nsidx}_{var_name}", var_name)
                 case "Boolean":
-                    ui_var = ui.BooleanVariable(f"{nsidx}_{var_name}", f"{var_name} (Boolean)")
+                    ui_var = ui.BooleanVariable(f"{nsidx}_{var_name}", var_name)
                 case _:
                     raise ValueError(f"Unsupported data type: {data_type}")
             setattr(self, f"{nsidx}_{var_name}", ui_var)
