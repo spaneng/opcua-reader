@@ -30,8 +30,9 @@ class OpcuaReaderConfig(config.Schema):
                 ]
             ),
             config.String(
-                "Unit",
+                "Units",
                 description="Unit of the OPC UA variable, e.g. '°C', 'V', 'm/s', etc",
+                default="",
             ),
         )
 
