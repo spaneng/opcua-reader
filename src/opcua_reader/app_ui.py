@@ -38,13 +38,14 @@ class OpcuaReaderUI:
 
             # create alarm UI
             lalm = len(var.alarms.elements)
+            print(f"Number of alarms for {var_name}: {lalm}")
             alm_elem = None
             if lalm == 1:
                 alm = var.alarms.elements[0]
                 alm_name = alm.name.value
                 alm_elem = ui.Slider(
                     f"{nsidx}_{var_name}_{alm_name}_slider",
-                    f"{alm_name} Alarms",
+                    f"{alm_name}",
                     min_val=alm.min_alarm.value,
                     max_val=alm.max_alarm.value,
                     step=0.1,
@@ -57,7 +58,7 @@ class OpcuaReaderUI:
                     alm_name = alm.name.value
                     if alm_name:
                         alm_elem = ui.Slider(
-                            f"{nsidx}_{var_name}_{alm_name}_slider",
+                            f"_{nsidx}_{var_name}_{alm_name}_slider",
                             f"{alm_name} Alarms",
                             min_val=alm.min_alarm.value,
                             max_val=alm.max_alarm.value,
@@ -65,27 +66,27 @@ class OpcuaReaderUI:
                             value=alm.min_alarm.value +((alm.max_alarm.value-alm.min_alarm.value) / 2),
                             inverted=False if alm.high_low.value == "Low" else True,
                         )
-                        setattr(self, f"{nsidx}_{var_name}_{alm_name}_slider", alm_elem)
+                        setattr(self, f"_{nsidx}_{var_name}_{alm_name}_slider", alm_elem)
                         sliders.append(alm_elem)
                     else:
                         raise ValueError("Alarm name cannot be empty")
 
                 alm_elem = ui.Submodule(
-                    f"{nsidx}_{var_name}_alm_settings",
+                    f"_{nsidx}_{var_name}_alm_settings",
                     f"{display_name}",
                     children=sliders
                 )
             if alm_elem is not None:
-                setattr(self, f"{nsidx}_{var_name}_alm", alm_elem)
-                alarm_elems.append(getattr(self, f"{nsidx}_{var_name}_alm_slider"))
+                setattr(self, f"_{nsidx}_{var_name}_alm", alm_elem)
+                alarm_elems.append(getattr(self, f"_{nsidx}_{var_name}_alm"))
 
         if len(alarm_elems) > 0:
+            print("adding alarms to UI")
             self.alarms = ui.Submodule(
                 "opcua_reader_alarms",
                 "Alarms Settings",
                 children=alarm_elems
             )
-                
 
     def fetch(self):
         ui_elements = [self.alert_stream]

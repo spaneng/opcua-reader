@@ -5,6 +5,26 @@
         "units": "°C",
         "data_type": "Float",
         "variable_name": "Temperature",
+        "variable_alarms": [
+          {
+            "alarm_name": "LL",
+            "high/low_alarm": "Low",
+            "maximum_alarm_value": 100,
+            "minimum_alarm_value": 0
+          },
+          {
+            "alarm_name": "HH",
+            "high/low_alarm": "High",
+            "maximum_alarm_value": 100,
+            "minimum_alarm_value": 0
+          },
+          {
+            "alarm_name": "H",
+            "high/low_alarm": "High",
+            "maximum_alarm_value": 100,
+            "minimum_alarm_value": 0
+          }
+        ],
         "name_space_index": "2",
         "sensor_object_name": "TemperatureSensor"
       },
@@ -12,6 +32,7 @@
         "units": "mMol",
         "data_type": "Float",
         "variable_name": "OxygenLevel",
+        "variable_alarms": [],
         "name_space_index": "2",
         "sensor_object_name": "TemperatureSensor"
       }

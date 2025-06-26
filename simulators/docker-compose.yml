@@ -21,6 +21,6 @@ services:
     #   - sample_simulator
     environment:
       - APP_KEY=opcua_reader_iiwsw
-    #   - CONFIG_FP=/app_config.json
-    # volumes:
-    #   - ./app_config.json:/app_config.json
+      - CONFIG_FP=/app_config.json
+    volumes:
+      - ./app_config.json:/app_config.json

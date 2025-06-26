@@ -78,15 +78,15 @@
                                 "description": "Unit of the OPC UA variable, e.g. '\u00b0C', 'V', 'm/s', etc",
                                 "default": ""
                             },
-                            "alarms": {
-                                "title": "Alarms",
-                                "x-name": "alarms",
+                            "variable_alarms": {
+                                "title": "Variable Alarms",
+                                "x-name": "variable_alarms",
                                 "x-hidden": false,
                                 "type": "array",
                                 "description": "Alarms associated with this OPC UA variable",
                                 "items": {
-                                    "title": "Alarms",
-                                    "x-name": "alarms",
+                                    "title": "Alarm",
+                                    "x-name": "alarm",
                                     "x-hidden": false,
                                     "type": "object",
                                     "properties": {
@@ -139,7 +139,7 @@
                             "variable_name",
                             "sensor_object_name",
                             "data_type",
-                            "alarms"
+                            "variable_alarms"
                         ]
                     }
                 }

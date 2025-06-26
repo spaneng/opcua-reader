@@ -55,10 +55,10 @@ class OPCUAVariable(config.Object):
             default=""
         )
 
-        alarmObjs = Alarm("Alarms")
+        alarmObjs = Alarm("Alarm")
         
         self.alarms = config.Array(
-            "Alarms",
+            "Variable Alarms",
             description="Alarms associated with this OPC UA variable",
             element=alarmObjs,
         )
