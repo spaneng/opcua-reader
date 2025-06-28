@@ -28,6 +28,12 @@ class Alarm(config.Object):
             description="Maximum value for the alarm to trigger",
             default=100.0
         )
+        
+        self.grace_period = condfig.Number(
+            "Grace Period (s)",
+            description="Duration threshold has to be met before calling alarm",
+            default = 60*10 # 10 minutes
+        )
 
 class OPCUAVariable(config.Object):
     def __init__(self, *args, **kwargs):
