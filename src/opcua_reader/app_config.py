@@ -12,8 +12,8 @@ class Alarm(config.Object):
         )
 
         self.high_low = config.Enum(
-            "High/Low Alarm",
-            description="Severity level of the alarm",
+            "Alarm Condition",
+            description="High: value greater than limit, Low: value less than limit",
             choices=["High", "Low"]
         )
 
@@ -29,10 +29,10 @@ class Alarm(config.Object):
             default=100.0
         )
         
-        self.grace_period = condfig.Number(
+        self.grace_period = config.Number(
             "Grace Period (s)",
             description="Duration threshold has to be met before calling alarm",
-            default = 60*10 # 10 minutes
+            default = 60*10.0 # 10 minutes
         )
 
 class OPCUAVariable(config.Object):

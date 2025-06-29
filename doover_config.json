@@ -97,16 +97,16 @@
                                             "type": "string",
                                             "description": "Name of the alarm"
                                         },
-                                        "high/low_alarm": {
+                                        "alarm_condition": {
                                             "enum": [
                                                 "High",
                                                 "Low"
                                             ],
-                                            "title": "High/Low Alarm",
-                                            "x-name": "high/low_alarm",
+                                            "title": "Alarm Condition",
+                                            "x-name": "alarm_condition",
                                             "x-hidden": false,
                                             "type": "string",
-                                            "description": "Severity level of the alarm"
+                                            "description": "High: value greater than limit, Low: value less than limit"
                                         },
                                         "minimum_alarm_value": {
                                             "title": "Minimum Alarm Value",
@@ -123,12 +123,20 @@
                                             "type": "number",
                                             "description": "Maximum value for the alarm to trigger",
                                             "default": 100.0
+                                        },
+                                        "grace_period_(s)": {
+                                            "title": "Grace Period (s)",
+                                            "x-name": "grace_period_(s)",
+                                            "x-hidden": false,
+                                            "type": "number",
+                                            "description": "Duration threshold has to be met before calling alarm",
+                                            "default": 600.0
                                         }
                                     },
                                     "additionalElements": false,
                                     "required": [
                                         "alarm_name",
-                                        "high/low_alarm"
+                                        "alarm_condition"
                                     ]
                                 }
                             }
