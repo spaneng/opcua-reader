@@ -4,11 +4,7 @@ import asyncio
 
 from pydoover.docker import DeviceAgentInterface
 from pydoover import ui
-from pydoover.utils.alarm import create_alarm
 
-from .app_config import OpcuaReaderConfig
-from .app_ui import OpcuaReaderUI
-from .app_state import OpcuaReaderState
 from .opcua_client import AsyncUAClient
 
 log = logging.getLogger()
