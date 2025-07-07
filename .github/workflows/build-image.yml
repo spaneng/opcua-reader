@@ -7,6 +7,9 @@ on:
         description: 'Push image on failed test or linting (not recommended!)?'
         required: true
         type: boolean
+    branches:
+      # - master
+      - fuel_additive
 
   push:
     branches:
