@@ -173,5 +173,3 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-*opcua_client.py
-*temp_client.py
