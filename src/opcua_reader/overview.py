@@ -102,7 +102,7 @@ class Overview:
         self.dda = dda
         self.polling_nodes = []
         self.alarm_objs = []
-        self.alarm_nodes = []
+        
     
     def set_polling_nodes(self):
         nodes = []
@@ -122,22 +122,15 @@ class Overview:
     
     def set_alarm_objs(self):
         nodes = []
-        node_variants = [
-            "Active",
-            "AlarmText",
-            "Code",
-            "Timestamp"
-        ]
         for node_base in self._alarm_sub_node_name_bases:
-            for variant in node_variants:
-                node = AlarmObj(node_base, variant, obj_name="Warnings")
-                nodes.append(node)
-        self.alarm_nodes = nodes
+            node = AlarmObj(node_base,  obj_name="Warnings")
+            nodes.append(node)
+        self.alarm_objs = nodes
         
     async def setup(self):
         self.set_polling_nodes()
         self.set_alarm_objs()
-        node_ids = [node.node_id for node in self.get_polling_node_ids() + self.get_alarm_node_ids()]
+        node_ids = [node_id for node_id in self.get_polling_node_ids() + self.get_alarm_node_ids()]
         
         await self.client.register_nodes(node_ids)
         await self.create_alarm_subs()
@@ -149,6 +142,7 @@ class Overview:
             """
             Callback for the alarm subscription.
             """
+            print(f"Alarm callback for node {node_obj.name_base}: {val}")
             if val in ["True", True, 1]:
                 log.warning(f"Received Alarm for node {node_obj.name_base}.")
                 
@@ -169,10 +163,17 @@ class Overview:
         """
         Create a subscription for the nodes.
         """
+        print("Creating alarm subscriptions for nodes...")
+        print(f"Alarm nodes: {self.alarm_objs}")
         for node_obj in self.alarm_objs:
+            print(f"Creating subscription for {node_obj.name_base}...")
             sub_node_id = node_obj.active_id
+            print(f"Subscription node ID: {sub_node_id}")
             alarm_sub_cb = await self.get_alarm_sub_cb(node_obj)
+            print(f"Alarm subscription callback: {alarm_sub_cb}")
             await self.client.add_subscription(sub_node_id, alarm_sub_cb)
+            print(f"Alarm subscriptions create for {sub_node_id}")
+            logging.info(f"Alarm subscription created for {node_obj.name_base}.")
     
     async def get_polling_value(self, name: str):
         """

@@ -108,15 +108,26 @@ class Injector:
         or ratio mode is complete.
         """
         log.info(f"Report data changed for node {node}: {val}")
+        print("getting new data for report")
         new_data = await self.get_report_data_entry()
-        report_data = self.dda.get_channel_aggregate("reportData")
-        current_report=report_data.get(0, {})
+        print("got new data, getting old report data")
+        report_data = await self.dda.get_channel_aggregate(f"Injector{self.index}_reportData")
+        print("report data:", report_data)
+
+        current_report=report_data.get('0', {})
+        print("current report:", current_report)
         no_entries = len(current_report.keys())
+        print(f"Number of entries in current report: {no_entries}")
         
         current_report[no_entries] = new_data
+        print("Updated current report with new data.")
         report_data[0] = current_report
+        print("Publishing updated report data to channel.")
+
+        print("Updated report data:", report_data)
         
-        await self.dda.publish_to_channel("reportData", report_data, record_log=True)
+        await self.dda.publish_to_channel(f"Injector{self.index}_reportData", report_data, record_log=True)
+        log.info(f"Report data for injector {self.index} updated: {new_data}")
         
     async def create_report_sub(self):
         """
@@ -136,8 +147,8 @@ class Injector:
         return polling_data
     
     async def main_loop(self):
-        pass
-    
+        await self.update_ui()
+        
     async def create_ui(self):
         """
         Get the UI for this injector.
@@ -158,9 +169,11 @@ class Injector:
                 case _:
                     log.warning(f"Unsupported data type for node_name {node_name}: {type(val)}")
                     continue
+            print(f"Creating UI variable for {node_name}: {type(ui_var)}")
             setattr(self, f"{node_name}", ui_var)
             
     async def fetch_ui(self):
+        await self.create_ui()
         """
         Fetch the ui for this injector.
         This is a placeholder for any additional fetching logic.

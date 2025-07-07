@@ -26,7 +26,10 @@ class OpcuaReaderApplication(Application):
         
     async def setup(self):
         self.loop_pause_period = 5
-        self.ui_elems = []
+        self.ui_elems = [ui.AlertStream("opcua_reader_alerts", "OPC UA Reader Alerts")]
+        print(dir(self.config.opcua_uri))
+
+        print(self.config.opcua_uri.__dict__)
 
         # Initializa OPCUA Client
         self.server_uri = self.config.opcua_uri.value
@@ -37,10 +40,12 @@ class OpcuaReaderApplication(Application):
         # Initialize Overview
         self.overview = Overview(self.opcua_client, self.device_agent)
         await self.overview.setup()
-        self.ui_elems.append(self.overview.fetch_ui())
+        self.ui_elems.extend(self.overview.fetch_ui())
+        print("ui_elems after overview is included", self.ui_elems)
         
         # Initialize Injectors
         self.no_injectors = self.config.no_of_injectors.value
+        print(f"Number of injectors: {self.no_injectors}")
         for inj in range(self.no_injectors):
             idx = inj + 1
             injector = Injector(
@@ -50,6 +55,7 @@ class OpcuaReaderApplication(Application):
             )
             await injector.setup()
             self.injectors.append(injector)
+            self.ui_elems.append(await injector.fetch_ui())
             
             log.info(f"Injector {idx} initialized.")
 
@@ -57,10 +63,10 @@ class OpcuaReaderApplication(Application):
         self.ui_manager.set_display_name("OPC UA Reader")
 
     async def main_loop(self):
-        # log.info(f"State is: {self.state.state}")
-        self.overview.main_loop()
+        print("running main loop")
+        await self.overview.main_loop()
         for injector in self.injectors:
-            injector.main_loop()
+            await injector.main_loop()
     
 
     async def _on_deployment_config_update(self, channel_name, config: dict[str, Any]):
