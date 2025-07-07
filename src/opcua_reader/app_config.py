@@ -12,10 +12,10 @@ class OpcuaReaderConfig(config.Schema):
         )
         
         self.no_of_injectors = config.Enum(
-            "Data Type",
-            description="Data type of the OPC UA variable",
+            "Number of Injectors",
+            description="Number of injectors to monitor",
             choices=[2, 3, 6]
         )
 
 if __name__ == "__main__":
-    OpcuaReaderConfig().export(Path(__file__).parent.parent.parent / "doover_config.json", "opcua_reader")
+    OpcuaReaderConfig().export(Path(__file__).parent.parent.parent / "doover_config.json", "fuel_additive_opcua_reader")

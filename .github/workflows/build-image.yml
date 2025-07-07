@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - master
+      - fuel_additive
 
 env:
   REGISTRY: ghcr.io

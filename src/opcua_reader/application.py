@@ -7,7 +7,6 @@ from typing import Any
 from asyncua import Client
 from pydoover.docker import Application, DeviceAgentInterface
 from pydoover import ui
-from pydoover.utils.alarm import create_alarm
 
 from .app_config import OpcuaReaderConfig
 from .opcua_client import AsyncUAClient

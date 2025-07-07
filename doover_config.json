@@ -1,5 +1,5 @@
 {
-    "opcua_reader": {
+    "fuel_additive_opcua_reader": {
         "name": "fuel_additive_opcua_reader",
         "display_name": "Fuel Additive OPCUA Reader",
         "type": "DEV",
@@ -25,132 +25,26 @@
                     "type": "string",
                     "description": "OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/"
                 },
-                "opcua_server_values": {
-                    "title": "OPCUA Server Values",
-                    "x-name": "opcua_server_values",
+                "number_of_injectors": {
+                    "enum": [
+                        2,
+                        3,
+                        6
+                    ],
+                    "title": "Number of Injectors",
+                    "x-name": "number_of_injectors",
                     "x-hidden": false,
-                    "type": "array",
-                    "items": {
-                        "title": "OPCUA Variable",
-                        "x-name": "opcua_variable",
-                        "x-hidden": false,
-                        "type": "object",
-                        "properties": {
-                            "name_space_index": {
-                                "title": "Name Space Index",
-                                "x-name": "name_space_index",
-                                "x-hidden": false,
-                                "type": "string",
-                                "description": "Name Space Index of the OPC UA variable"
-                            },
-                            "variable_name": {
-                                "title": "Variable Name",
-                                "x-name": "variable_name",
-                                "x-hidden": false,
-                                "type": "string",
-                                "description": "Name of the OPC UA variable to read"
-                            },
-                            "sensor_object_name": {
-                                "title": "Sensor Object Name",
-                                "x-name": "sensor_object_name",
-                                "x-hidden": false,
-                                "type": "string",
-                                "description": "Name of the sensor object in the OPC UA server"
-                            },
-                            "data_type": {
-                                "enum": [
-                                    "Int",
-                                    "Float",
-                                    "String",
-                                    "Boolean"
-                                ],
-                                "title": "Data Type",
-                                "x-name": "data_type",
-                                "x-hidden": false,
-                                "type": "string",
-                                "description": "Data type of the OPC UA variable"
-                            },
-                            "units": {
-                                "title": "Units",
-                                "x-name": "units",
-                                "x-hidden": false,
-                                "type": "string",
-                                "description": "Unit of the OPC UA variable, e.g. '\u00b0C', 'V', 'm/s', etc",
-                                "default": ""
-                            },
-                            "variable_alarms": {
-                                "title": "Variable Alarms",
-                                "x-name": "variable_alarms",
-                                "x-hidden": false,
-                                "type": "array",
-                                "description": "Alarms associated with this OPC UA variable",
-                                "items": {
-                                    "title": "Alarm",
-                                    "x-name": "alarm",
-                                    "x-hidden": false,
-                                    "type": "object",
-                                    "properties": {
-                                        "alarm_name": {
-                                            "title": "Alarm Name",
-                                            "x-name": "alarm_name",
-                                            "x-hidden": false,
-                                            "type": "string",
-                                            "description": "Name of the alarm"
-                                        },
-                                        "high/low_alarm": {
-                                            "enum": [
-                                                "High",
-                                                "Low"
-                                            ],
-                                            "title": "High/Low Alarm",
-                                            "x-name": "high/low_alarm",
-                                            "x-hidden": false,
-                                            "type": "string",
-                                            "description": "Severity level of the alarm"
-                                        },
-                                        "minimum_alarm_value": {
-                                            "title": "Minimum Alarm Value",
-                                            "x-name": "minimum_alarm_value",
-                                            "x-hidden": false,
-                                            "type": "number",
-                                            "description": "Minimum value for the alarm to trigger",
-                                            "default": 0.0
-                                        },
-                                        "maximum_alarm_value": {
-                                            "title": "Maximum Alarm Value",
-                                            "x-name": "maximum_alarm_value",
-                                            "x-hidden": false,
-                                            "type": "number",
-                                            "description": "Maximum value for the alarm to trigger",
-                                            "default": 100.0
-                                        }
-                                    },
-                                    "additionalElements": false,
-                                    "required": [
-                                        "alarm_name",
-                                        "high/low_alarm"
-                                    ]
-                                }
-                            }
-                        },
-                        "additionalElements": false,
-                        "required": [
-                            "name_space_index",
-                            "variable_name",
-                            "sensor_object_name",
-                            "data_type",
-                            "variable_alarms"
-                        ]
-                    }
+                    "description": "Number of injectors to monitor"
                 }
             },
             "additionalElements": true,
             "required": [
                 "opcua_address",
-                "opcua_server_values"
+                "number_of_injectors"
             ]
         },
         "repo_branch": "main",
-        "staging_config": {}
+        "staging_config": {},
+        "key": "d198f35f-c747-46c5-857b-b05243fa9364"
     }
 }
