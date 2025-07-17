@@ -17,5 +17,5 @@ class OpcuaReaderConfig(config.Schema):
             choices=[2, 3, 6]
         )
 
-if __name__ == "__main__":
+def export():
     OpcuaReaderConfig().export(Path(__file__).parent.parent.parent / "doover_config.json", "fuel_additive_opcua_reader")
