@@ -57,6 +57,24 @@ class Injector:
         "TotalMainFlowHeader",
         "TotalMainFlowTodayHeader",
     ]
+
+    _polling_node_ui = [
+        {"InjectionType":{"name": "Injection Type"}},
+        {"NameInjector":{"name": "Injector Name"}},
+        {"TotalInjectedVolumeInject":{"name": "Total Injected Volume"}},
+        {"SPT_BatchPresetInject":{"name": "Batch Preset"}},
+        {"TotalInjectedVolumeBatchInject":{"name": "Total Injected Volume Batch"}},
+        {"TotalInjectedVolumeBatchTodayInject":{"name": "Total Injected Volume Batch Today"}},
+
+        {"SPT_RateIntervalInject":{"name": "Rate Interval"}},
+        {"SPT_VolumePerInject":{"name": "Volume Per Inject"}},
+        {"InjectionVolumeInjector":{"name": "Injection Volume Injector"}},
+        {"TotalInjectedVolumeRatioInject":{"name": "Total Injected Volume Ratio"}},
+        {"TotalInjectedVolumeRatioTodayInject":{"name": "Total Injected Volume Ratio Today"}},
+        {"CurrentIntervalFlowHeader":{"name": "Current Interval Flow"}},
+        {"TotalMainFlowHeader":{"name": "Total Main Flow"}},
+        {"TotalMainFlowTodayHeader":{"name": "Total Main Flow Today"}},
+    ]
     
     def __init__(
         self, 

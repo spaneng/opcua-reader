@@ -2,7 +2,7 @@ import asyncio
 from asyncua import Client, ua
 
 async def main():
-    url = "opc.tcp://localhost:8080"
+    url = "opc.tcp://192.168.1.190:8030"
     async with Client(url=url) as client:
         print("Connected to OPC UA Server")
 

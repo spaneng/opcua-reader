@@ -9,15 +9,18 @@ from .opcua_client import AsyncUAClient
 
 log = logging.getLogger()
 
-class AlarmObj:
+class AlarmObj: #can be either a warning or an alarm
     def __init__(self, name_base: str, obj_name: str = "Warnings"):
         self.name_base = name_base
         
         self.obj_name = obj_name
-        self.active_id = f'ns=3;s="DB_OPCUA_{obj_name}"."{self.obj_name}"[{self.name_base}]."Active"'
-        self.timestamp_id = f'ns=3;s="DB_OPCUA_{obj_name}"."{self.obj_name}"[{self.name_base}]."Timestamp"'
-        self.alarm_text_id = f'ns=3;s="DB_OPCUA_{obj_name}"."{self.obj_name}"[{self.name_base}]."AlarmText"'
-        self.code_id = f'ns=3;s="DB_OPCUA_{obj_name}"."{self.obj_name}"[{self.name_base}]."Code"'
+        server_obj_name = obj_name
+        if obj_name == "Alarms":
+            server_obj_name = "Alams"
+        self.active_id = f'ns=3;s="DB_OPCUA_{server_obj_name}"."{self.obj_name}"[{self.name_base}]."Active"'
+        self.timestamp_id = f'ns=3;s="DB_OPCUA_{server_obj_name}"."{self.obj_name}"[{self.name_base}]."Timestamp"'
+        self.alarm_text_id = f'ns=3;s="DB_OPCUA_{server_obj_name}"."{self.obj_name}"[{self.name_base}]."AlarmText"'
+        self.code_id = f'ns=3;s="DB_OPCUA_{server_obj_name}"."{self.obj_name}"[{self.name_base}]."Code"'
         
     def get_node_ids(self):
         return [
@@ -65,23 +68,25 @@ class Overview:
         60,
         61,
         65,
-        66,
-        111,
-        112,
-        113,
-        114,
-        115,
-        116,
-        117,
-        118,
-        119,
-        120,
-        121,
-        122,
-        123,
-        124,
-        129,
-        130,
+        66
+    ]
+    _warning_node_name_bases = [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        29,
+        30,
     ]
 
     _polling_node_name_bases = [
@@ -123,6 +128,9 @@ class Overview:
     def set_alarm_objs(self):
         nodes = []
         for node_base in self._alarm_sub_node_name_bases:
+            node = AlarmObj(node_base,  obj_name="Alarms")
+            nodes.append(node)
+        for node_base in self._warning_node_name_bases:
             node = AlarmObj(node_base,  obj_name="Warnings")
             nodes.append(node)
         self.alarm_objs = nodes
