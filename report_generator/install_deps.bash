@@ -11,6 +11,7 @@ uv pip install --target=./include/ jinja2
 uv pip install --target=./include/ weasyprint
 uv pip install --target=./include/ tzlocal
 uv pip install --target=./include/ pydoover
+uv pip install --target=./include/ pillow
 
 #uv pip install --target=./include/ git+https://github.com/spaneng/pydoover.git
 

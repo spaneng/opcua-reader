@@ -1,0 +1,8 @@
+{
+    "reports": [
+        {
+            "name": "Reconciliation Report",
+            "package_dir": "report_generator"
+        }
+    ]
+}

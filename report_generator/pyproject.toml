@@ -1,7 +1,18 @@
 [project]
 name = "report-generator"
 version = "0.1.0"
-description = "Add your description here"
+description = "Report generator for OPCUA reader"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pydoover @ git+https://github.com/getdoover/pydoover.git@remote-inherit-from-container",
+    "jinja2>=3.0.0",
+    "weasyprint>=60.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true

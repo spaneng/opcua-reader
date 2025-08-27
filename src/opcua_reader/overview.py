@@ -104,6 +104,8 @@ class Overview:
         dda: DeviceAgentInterface,
         ui_manager: ui.UIManager,
         injectors: list,
+        timezone: str = "Asia/Riyadh",
+        skid_name: str = "Skid 1"
     ):
         self.client = opcua_client
         self.dda = dda
@@ -111,7 +113,9 @@ class Overview:
         self.injectors = injectors
         self.polling_nodes = []
         self.alarm_objs = []
-    
+        self.timezone = timezone
+        self.skid_name = skid_name
+        
     def set_polling_nodes(self):
         nodes = []
         for node_base in self._polling_node_name_bases:
@@ -270,8 +274,17 @@ class Overview:
             display_name="Reconciliation",
             component_url="https://default.doover.ngrok.app/ReconciliationComponent.js",
             children=children,
+            timezone=self.timezone,
+            skid_name=self.skid_name,
             position=7,
-            injectors=[{"name":injector.name, "displayName":injector.display_name} for injector in self.injectors]
+            injectors=[
+                {
+                    "name": injector.name,
+                    "displayName": injector.display_name,
+                    "index": injector.index
+                }
+                for injector in self.injectors
+            ]
         )
         
         return [

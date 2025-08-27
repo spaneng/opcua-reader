@@ -61,8 +61,11 @@ class OpcuaReaderApplication(Application):
             self.opcua_client, 
             self.device_agent, 
             self.ui_manager,
-            injectors=self.injectors
+            injectors=self.injectors,
+            timezone=self.config.timezone.value,
+            skid_name=self.app_display_name
         )
+        
         await self.overview.setup()
         self.ui_elems.extend(self.overview.fetch_ui())
         

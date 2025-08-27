@@ -21,11 +21,6 @@ build-backend = "hatchling.build"
 [tool.hatch.metadata]
 allow-direct-references = true
 
-[tool.uv.workspace]
-members = [
-    "report_generator",
-]
-
 [dependency-groups]
 dev = [
     "aiohttp>=3.11.18",
