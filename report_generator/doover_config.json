@@ -1,7 +1,7 @@
 {
     "reports": [
         {
-            "name": "Reconciliation Report",
+            "name": "Fuel Additive Report Generator",
             "package_dir": "report_generator"
         }
     ]
