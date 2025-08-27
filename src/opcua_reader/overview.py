@@ -272,7 +272,7 @@ class Overview:
         self.reconciliation = ui.RemoteComponent(
             name="Reconciliation",
             display_name="Reconciliation",
-            component_url="https://default.doover.ngrok.app/ReconciliationComponent.js",
+            component_url="https://spaneng.github.io/fuel-additive-reconciliation/ReconciliationComponent.js",
             children=children,
             timezone=self.timezone,
             skid_name=self.skid_name,

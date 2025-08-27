@@ -305,7 +305,7 @@ class Injector:
         # hmi_remote = ui.Submodule(
             f"injector_{self.index}_hmi",
             f"Injector {self.index} HMI",
-            component_url="https://dev.doover.ngrok.app/HMIComponent.js",
+            component_url="https://spaneng.github.io/fuel-additive-hmi/HMIComponent.js",
             injector_index=self.index,
             children=[
                 ui.NumericVariable(f"injector{self.index}LInject", f"Injector {self.index} L Inject"),
@@ -324,7 +324,7 @@ class Injector:
         table_remote = ui.RemoteComponent(
             f"injector_{self.index}_table",
             f"Injector {self.index} Table",
-            component_url="https://2.dev.doover.ngrok.app/DooverTables.js",
+            component_url="https://spaneng.github.io/doover_tables/DooverTables.js",
             channel_name=self.table_manager.channel_name,
             table_name=self.name
         )

@@ -8,3 +8,4 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)/include:$(pwd)"
 
 # Run pydoover as a module instead of trying to use the entry point
 doover report compose --package-path "injector_report" --agent-ids=$AGENT --agent-names "Test" --profile solarinjection 
+# python3.11doover report compose --package-path "injector_report" --agent-ids=$AGENT --agent-names "Test" --profile solarinjection 
