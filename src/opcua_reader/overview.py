@@ -333,8 +333,16 @@ class Overview:
             LFlowDayTotal = polling_data[f"TotalMainFlowTodayHeader{injector.index}"]
             VolPerInject = polling_data[f"SPT_VolumePerInject{injector.index}"] #
             InjectRateInterval = polling_data[f"SPT_RateIntervalInject{injector.index}"] #
-            CalcedLTotal = (LFlowDayTotal /InjectRateInterval)* VolPerInject
-            Difference = (1-(CalcedLTotal / LInjectedDayTotal))*100
+            
+            if InjectRateInterval != 0:
+                CalcedLTotal = (LFlowDayTotal /InjectRateInterval)* VolPerInject
+            else:
+                CalcedLTotal = 0
+            
+            if LInjectedDayTotal != 0:
+                Difference = (1-(CalcedLTotal / LInjectedDayTotal))*100
+            else:
+                Difference = 0
             
             gas_total += LFlowDayTotal
             calced_injected_total += CalcedLTotal
@@ -359,7 +367,11 @@ class Overview:
             self.ui_manager.get_element(inj_calced_total).update(round(CalcedLTotal, 2))
             self.ui_manager.get_element(inj_difference).update(round(Difference, 2))
             
-        difference = round((1-(calced_injected_total / actual_injected_total))*100, 2)
+        if actual_injected_total != 0:
+            difference = round((1-(calced_injected_total / actual_injected_total))*100, 2)
+        else:
+            difference = 0
+            
         self.ui_manager.get_element("GasTotal").update(round(gas_total, 2))
         self.ui_manager.get_element("CalcedInjectedTotal").update(round(calced_injected_total, 2))
         self.ui_manager.get_element("ActualInjectedTotal").update(round(actual_injected_total, 2))

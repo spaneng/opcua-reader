@@ -206,8 +206,14 @@ class Injector:
             theoretical_injected = None
             actual_theoretical_ratio = None
         else:
-            theoretical_injected = round(gasoline_vol * inject_interval / vol_per_inject, 2)
-            actual_theoretical_ratio = round((actual_injected / theoretical_injected)*100, 1)
+            if vol_per_inject != 0:
+                theoretical_injected = round(gasoline_vol * inject_interval / vol_per_inject, 2)
+            else:
+                theoretical_injected = 0
+            if theoretical_injected != 0:
+                actual_theoretical_ratio = round((actual_injected / theoretical_injected)*100, 1)
+            else:
+                actual_theoretical_ratio = 0
             gasoline_vol = round(gasoline_vol, 2)
             actual_injected = round(actual_injected, 2)
         
