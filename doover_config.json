@@ -1,4 +1,10 @@
 {
+    "reports": [
+        {
+            "name": "Reconciliation Report",
+            "package_dir": "report_generator"
+        }
+    ],
     "fuel_additive_opcua_reader": {
         "name": "fuel_additive_opcua_reader",
         "display_name": "Fuel Additive OPCUA Reader",
@@ -25,22 +31,62 @@
                     "type": "string",
                     "description": "OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/"
                 },
-                "number_of_injectors": {
-                    "enum": [
-                        2,
-                        3,
-                        6
-                    ],
-                    "title": "Number of Injectors",
-                    "x-name": "number_of_injectors",
+                "injectors": {
+                    "title": "Injectors",
+                    "x-name": "injectors",
                     "x-hidden": false,
-                    "description": "Number of injectors to monitor"
+                    "type": "array",
+                    "description": "List of injectors, names MUST be unique",
+                    "items": {
+                        "title": "Injector",
+                        "x-name": "injector",
+                        "x-hidden": false,
+                        "type": "object",
+                        "description": "Injector configuration",
+                        "properties": {
+                            "injector_name": {
+                                "title": "Injector Name",
+                                "x-name": "injector_name",
+                                "x-hidden": false,
+                                "type": "string",
+                                "description": "Name of the injector"
+                            },
+                            "injector_index": {
+                                "title": "Injector Index",
+                                "x-name": "injector_index",
+                                "x-hidden": false,
+                                "type": "integer",
+                                "description": "Index of the injector, used for the OPC UA node names"
+                            }
+                        },
+                        "additionalElements": true,
+                        "required": [
+                            "injector_name",
+                            "injector_index"
+                        ]
+                    }
+                },
+                "timezone": {
+                    "title": "Timezone",
+                    "x-name": "timezone",
+                    "x-hidden": false,
+                    "type": "string",
+                    "description": "Timezone of the report, e.g. America/New_York",
+                    "default": "Asia/Riyadh"
+                },
+                "report_restart_time": {
+                    "title": "Report Restart Time",
+                    "x-name": "report_restart_time",
+                    "x-hidden": false,
+                    "type": "integer",
+                    "description": "Time in Hrs to restart the report, 6=6am, 12=noon, 17=5pm etc.",
+                    "default": 10
                 }
             },
             "additionalElements": true,
             "required": [
                 "opcua_address",
-                "number_of_injectors"
+                "injectors"
             ]
         },
         "repo_branch": "main",

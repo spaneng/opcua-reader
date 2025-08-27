@@ -12,6 +12,7 @@ from .app_config import OpcuaReaderConfig
 from .opcua_client import AsyncUAClient
 from .overview import Overview
 from .injector import Injector
+from .doover_table import DooverTableManager
 
 log = logging.getLogger()
 
@@ -23,13 +24,14 @@ class OpcuaReaderApplication(Application):
 
         self.started = time.time()
         self.injectors = []
+        self.doover_table_manager = DooverTableManager(self.device_agent)
         
     async def setup(self):
         self.loop_pause_period = 5
         self.ui_elems = [ui.AlertStream("opcua_reader_alerts", "OPC UA Reader Alerts")]
-        print(dir(self.config.opcua_uri))
-
-        print(self.config.opcua_uri.__dict__)
+        
+        # Initialize Doover Table Manager
+        self.doover_table_manager.setup()
 
         # Initializa OPCUA Client
         self.server_uri = self.config.opcua_uri.value
@@ -37,33 +39,40 @@ class OpcuaReaderApplication(Application):
         await self.opcua_client.setup()
         log.info("OPC UA Client setup complete.")
         
-        # Initialize Overview
-        self.overview = Overview(self.opcua_client, self.device_agent)
-        await self.overview.setup()
-        self.ui_elems.extend(self.overview.fetch_ui())
-        print("ui_elems after overview is included", self.ui_elems)
-        
         # Initialize Injectors
-        self.no_injectors = self.config.no_of_injectors.value
-        print(f"Number of injectors: {self.no_injectors}")
-        for inj in range(self.no_injectors):
-            idx = inj + 1
+        self._injector_configs = self.config.injectors.elements
+        for inj_conf in self._injector_configs:
             injector = Injector(
-                idx,
+                inj_conf.injector_index.value,
+                inj_conf.injector_name.value,
                 self.opcua_client, 
                 self.device_agent,
+                self.ui_manager,
+                self.config.timezone.value
             )
             await injector.setup()
             self.injectors.append(injector)
             self.ui_elems.append(await injector.fetch_ui())
             
-            log.info(f"Injector {idx} initialized.")
-
+            log.info(f"Injector {inj_conf.injector_name.value}; {inj_conf.injector_index.value} initialized.")
+        
+        # Initialize Overview
+        self.overview = Overview(
+            self.opcua_client, 
+            self.device_agent, 
+            self.ui_manager,
+            injectors=self.injectors
+        )
+        await self.overview.setup()
+        self.ui_elems.extend(self.overview.fetch_ui())
+        
         self.ui_manager.add_children(*self.ui_elems)
-        self.ui_manager.set_display_name("OPC UA Reader")
+        self.ui_manager.set_variant("stacked")
+        self.ui_manager.set_display_name("Fuel Additive")
+        await asyncio.sleep(3)
 
     async def main_loop(self):
-        print("running main loop")
+        # print("running main loop")
         await self.overview.main_loop()
         for injector in self.injectors:
             await injector.main_loop()

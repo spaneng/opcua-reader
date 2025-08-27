@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Reconciliation Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#fafafa; --ink:#111; --muted:#666; --brand:#029E57;
+      --card:#fff; --border:#e2e2e2; --radius:12px; --pad:24px; --maxw:1600px;
+      --font: Helvetica, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;color:var(--ink);background:var(--card);font-family:var(--font)}
+    .wrap{max-width:var(--maxw); margin:32px auto; padding:16px}
+    .panel{background:var(--card); border-radius:var(--radius)}
+
+    .header{display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; align-items:center; margin-bottom:32px}
+    .logoBox{display:flex; justify-content:center}
+    .logoBox img{height:80px; width:auto}
+    .titleBox{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px}
+    .title{font-size:24px; font-weight:700; letter-spacing:.04em}
+    .skidName{font-size:20px; font-weight:700; letter-spacing:.04em}
+    .dateBox{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px}
+    .dateField{display:flex; align-items:center; gap:8px; width:70%}
+    .label{font-size:14px; min-width:60px}
+    .input{flex:1; border:1px solid var(--border); background:#fff; border-radius:8px; padding:8px 12px; font-size:14px}
+
+    .grid-3{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:22px}
+    .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 14px 0px 14px; page-break-inside:avoid}
+    .card h3{margin:0 0 12px 0; font-size:18px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-bottom:12px}
+    .field{display:flex; flex-direction:column; gap:6px}
+    .field .hint{font-size:12px; color:var(--muted); line-height:1.2}
+    .field .hint strong{font-weight:600}
+
+    .number{
+        position:relative; 
+        display:flex; 
+        align-items:center; 
+        justify-content:space-between;
+        border:1px solid var(--border); 
+        border-radius:8px; 
+        background:#fff; 
+        padding:8px 12px; 
+        font-size:14px; 
+        min-height:38px; 
+        width:95%;
+        white-space:nowrap; 
+        overflow:hidden; 
+        text-overflow:ellipsis; 
+    }
+    .number .value{
+        flex: 1;
+        text-align: left;
+    }
+    .unit{
+        font-size:13px; color:var(--muted);
+        margin-left: 8px;
+    }
+    /* .number *{color:black !important} */
+    /* .unit{position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--muted)} */
+
+    .summary {
+        background:var(--card); 
+        border:1px solid var(--border);
+        border-radius:var(--radius); 
+        padding:var(--pad);
+        height:auto;
+
+    }
+    .summary .number{color:black !important}
+    .summary h3{margin:0 0 12px 0; font-size:18px}
+
+    .divider{height:1px; background:var(--brand); margin:12px 0 18px 0}
+    .grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+
+    @media (max-width:1200px){.grid-4{grid-template-columns:1fr 1fr}}
+    @media (max-width:900px){.grid-3{grid-template-columns:1fr}}
+    @media (max-width:700px){.header{grid-template-columns:1fr; gap:12px}.dateField{width:100%}.grid-3,.grid-4{grid-template-columns:1fr}}
+    @page{size:A4; margin:16mm}
+    @media print {.wrap{margin:0 auto; padding:0} .panel{background:#fff} .divider{background:var(--brand)} a[href]:after{content:""}}
+  </style>
+</head>
+<body>
+  <div class="wrap panel">
+
+    <!-- Header -->
+    <section class="header">
+      <div class="logoBox">
+        <img src="https://doover.com/wp-content/uploads/ZGH_logon.png.webp" alt="Logo" />
+      </div>
+      <div class="titleBox">
+        <div class="title">RECONCILIATION</div>
+        <div class="skidName"><span class="label">Skid:</span> {{ skid_name }}</div> 
+      </div>
+      <div class="dateBox">
+        <div class="dateField">
+          <div class="label">Time :</div>
+            <div class="input">
+              {{ report_time }}
+            </div>
+          </div>
+        <div class="dateField">
+          <div class="label">Date :</div>
+          <div class="input">
+            {{ report_date }}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Injectors -->
+    <section class="grid-3">
+      {% for inj in injectors %}
+      <article class="card">
+        <h3>{{inj.injector_name}}</h3>
+        <div class="divider"></div>
+
+        <div class="row">
+          <div class="field">
+            <div class="hint"><strong>Header Total</strong><br/>Gasoline</div>
+            <div class="number">
+                <span class="value">{{ inj.flowmeter_total }}</span>
+                <span class="unit">L</span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="hint"><strong>Injection Total</strong><br/>Detergent</div>
+            <div class="number">
+                <span class="value">{{ inj.actual_injection_detergent }}</span>
+                <span class="unit">L</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <div class="hint"><strong>Calc. Detergent</strong></div>
+            <div class="number">
+                <span class="value">{{ inj.calculated_detergent }}</span>
+                <span class="unit">L</span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="hint"><strong>Difference</strong></div>
+            <div class="number">
+                <span class="value">{{ inj.difference }}</span>
+                <span class="unit">%</span>
+            </div>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+
+    <!-- Summary -->
+    <section class="summary">
+      <h3>Reconciliation Totals</h3>
+      <div class="divider"></div>
+      <div class="grid-4">
+        <div class="field">
+          <div class="label"><strong>Gasoline</strong></div>
+          <div class="number">
+              <span class="value">{{ total_gasoline }}</span>
+              <span class="unit">L</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="label"><strong>Calc. Detergent</strong></div>
+          <div class="number">
+              <span class="value">{{ total_calculated_detergent }}</span>
+              <span class="unit">L</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="label"><strong>Act. Detergent</strong></div>
+          <div class="number">
+              <span class="value">{{ total_actual_detergent_injected }}</span>
+              <span class="unit">L</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="label"><strong>Difference</strong></div>
+          <div class="number">
+              <span class="value">{{ difference }}</span>
+              <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

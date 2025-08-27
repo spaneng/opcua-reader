@@ -1,4 +1,19 @@
 {
     "opcua_address": "opc.tcp://localhost:4840",
-    "number_of_injectors": 2
+    "injectors": [
+        {
+            "injector_name": "Inj 1CX",
+            "injector_index": 1
+        },
+        {
+            "injector_name": "Inj 2EQ",
+            "injector_index": 2
+        },
+        {
+            "injector_name": "Inj 3PL",
+            "injector_index": 3
+        }
+    ],
+    "timezone": "Asia/Riyadh",
+    "report_restart_time": 0
 } 

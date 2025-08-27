@@ -4,12 +4,12 @@ import json
 import logging
 from asyncua import Server, ua
 from pathlib import Path
-
-
+from pydoover import config
 
 class SimulatedOPCUAServer:
-    def __init__(self, endpoint="opc.tcp://0.0.0.0:4840/"):
-        self.endpoint = endpoint
+    def __init__(self, config: config.Schema =None):
+        self.config=config
+        self.endpoint = self.config.opcua_uri.value or "opc.tcp://0.0.0.0:4840/"
         self.server = Server()
         self.namespace_uri = "test"
         self.variables = {}

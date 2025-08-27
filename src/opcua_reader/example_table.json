@@ -1,0 +1,200 @@
+{
+    "sids_injector": {
+      "display_name": "A Nice Injector",
+      "table_description": "Days",
+      "default_dataset": -1,
+      "header_display_names": {
+        "Batch_Start_Time": "Start Time",
+        "Duration": "Duration",
+        "Actual_Injected": "Actual Inject Amount",
+        "Theoretical_Injected": "Imputed Value",
+        "Actual_Theoretical_Ratio": "Actual vs Theoretical Ratio",
+        "Header_Volume": "Header Volume"
+      },
+      "header_order": [
+        "Batch_Start_Time",
+        "Duration",
+        "Actual_Injected",
+        "Theoretical_Injected",
+        "Actual_Theoretical_Ratio",
+        "Header_Volume"
+      ],
+      "data": [
+        {
+          "display_name": "Monday",
+          "data": [
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            }
+          ]
+        },
+        {
+          "display_name": "Yesterday",
+          "data": [
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            }
+          ]
+        },
+        {
+          "display_name": "Today",
+          "data": [
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            },
+            {
+              "Batch_Start_Time": "06:04:00",
+              "Duration": "1:05",
+              "Actual_Injected": 100,
+              "Theoretical_Injected": 110,
+              "Actual_Theoretical_Ratio": "-13%",
+              "Header_Volume": 99
+            }
+          ]
+        }
+      ]
+    }
+  }

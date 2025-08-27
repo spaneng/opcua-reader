@@ -1,7 +1,9 @@
 import asyncio
+import logging
 from asyncua import Client, ua
 from asyncua.common.subscription import Subscription
 
+log = logging.getLogger()
 class AsyncUAClient:
     def __init__(self, url: str):
         self.url = url
@@ -13,11 +15,11 @@ class AsyncUAClient:
     async def setup(self):
         await self.connect()
         
-        print("Client setup complete")
+        log.info("Client setup complete")
 
     async def connect(self):
         await self.client.connect()
-        print(f"Connected to {self.url}")
+        log.info(f"Connected to {self.url}")
 
     async def disconnect(self):
         for sub, handle in self.sub_handler_map:
@@ -25,7 +27,7 @@ class AsyncUAClient:
         for sub in self.subscriptions:
             await sub.delete()
         await self.client.disconnect()
-        print("Disconnected")
+        log.info("Disconnected")
 
     async def add_subscription(self, nodeid_str: str, callback, cb_period: int = 500):
         """
@@ -43,11 +45,15 @@ class AsyncUAClient:
 
         handler = SubHandler()
         subscription: Subscription = await self.client.create_subscription(cb_period, handler)
-        handle = await subscription.subscribe_data_change(node)
+        try:
+            handle = await subscription.subscribe_data_change(node)
+        except Exception as e:
+            log.error(f"Error subscribing to {nodeid_str}: {e}")
+            return
 
         self.subscriptions.append(subscription)
         self.sub_handler_map.append((subscription, handle))
-        print(f"Subscribed to {nodeid_str}")
+        log.info(f"Subscribed to {nodeid_str}")
         
     async def get_node_id_val(self, nodeid_str: str):
         """
@@ -63,29 +69,29 @@ class AsyncUAClient:
         for nodeid_str in node_ids:
             node = self.nodes.get(nodeid_str, None)
             if node is not None:
-                print(f"Node {nodeid_str} already registered.")
+                log.debug(f"Node {nodeid_str} already registered.")
                 continue
             try:
                 node = self.client.get_node(nodeid_str)
             except Exception as e:
-                print(f"Error getting node {nodeid_str}: {e}")
+                log.error(f"Error getting node {nodeid_str}: {e}")
                 continue
             self.nodes[nodeid_str] = node
-            print(f"Registered node: {nodeid_str}")
+            log.debug(f"Registered node: {nodeid_str}")
             
     async def read_value(self, nodeid_str: str):
         """
         Read the value of a node by its NodeId string.
         """
         if nodeid_str not in self.nodes:
-            print(f"Node {nodeid_str} not registered.")
+            logging.error(f"Node {nodeid_str} not registered.")
             self.nodes[nodeid_str] = self.client.get_node(nodeid_str)
         node = self.nodes[nodeid_str]
         try:
             value = await node.read_value()
             return value
         except Exception as e:
-            print(f"Error reading value from {nodeid_str}: {e}")
+            log.warning(f"Error reading value from {nodeid_str}: {e}")
             return None
 
 async def main():

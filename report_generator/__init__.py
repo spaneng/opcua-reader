@@ -1,0 +1,3 @@
+from injector_report import InjectorReportGenerator
+
+generator = InjectorReportGenerator

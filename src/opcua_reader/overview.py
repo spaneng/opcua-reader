@@ -102,12 +102,15 @@ class Overview:
         self, 
         opcua_client: AsyncUAClient,
         dda: DeviceAgentInterface,
+        ui_manager: ui.UIManager,
+        injectors: list,
     ):
         self.client = opcua_client
         self.dda = dda
+        self.ui_manager = ui_manager
+        self.injectors = injectors
         self.polling_nodes = []
         self.alarm_objs = []
-        
     
     def set_polling_nodes(self):
         nodes = []
@@ -150,7 +153,6 @@ class Overview:
             """
             Callback for the alarm subscription.
             """
-            print(f"Alarm callback for node {node_obj.name_base}: {val}")
             if val in ["True", True, 1]:
                 log.warning(f"Received Alarm for node {node_obj.name_base}.")
                 
@@ -195,7 +197,6 @@ class Overview:
     async def main_loop(self):
         await self.update_ui()
         
-            
     def fetch_ui(self):
         """
         Fetch the ui for this injector.
@@ -206,36 +207,71 @@ class Overview:
             name="LevelTank1",
             display_name="Level Tank 1 (%)",
             precision=1,
+            position=1
         )
         
         self.levelTank2 = ui.NumericVariable(
             name="LevelTank2",
             display_name="Level Tank 2 (%)",
             precision=1,
+            position=2
         )
         
         self.pressure = ui.NumericVariable(
             name="Pressure",
             display_name="Pressure (bar)",
             precision=2,
+            position=3
         )
         
         self.shelterTemperature = ui.NumericVariable(
             name="ShelterTemperature",
             display_name="Shelter Temperature (°C)",
             precision=1,
+            position=4
         )
         
         self.temperaturePump1 = ui.NumericVariable(
             name="TemperaturePump1",
             display_name="Temperature Pump 1 (°C)",
             precision=1,
+            position=5
         )
         
         self.temperaturePump2 = ui.NumericVariable(
             name="TemperaturePump2",
             display_name="Temperature Pump 2 (°C)",
             precision=1,
+            position=6
+        )
+        
+        children = self.get_reconciliation_ui()
+        children.extend([
+            ui.NumericVariable(
+                name="GasTotal",
+                display_name="Gas Total (L)",
+            ),
+            ui.NumericVariable(
+                name="CalcedInjectedTotal",
+                display_name="Gas Total (L)",
+            ),
+            ui.NumericVariable(
+                name="ActualInjectedTotal",
+                display_name="Injected Total (L)",
+            ),
+            ui.NumericVariable(
+                name="Difference",
+                display_name="Difference (%)",
+            ),
+        ])
+        
+        self.reconciliation = ui.RemoteComponent(
+            name="Reconciliation",
+            display_name="Reconciliation",
+            component_url="https://default.doover.ngrok.app/ReconciliationComponent.js",
+            children=children,
+            position=7,
+            injectors=[{"name":injector.name, "displayName":injector.display_name} for injector in self.injectors]
         )
         
         return [
@@ -245,7 +281,76 @@ class Overview:
             self.shelterTemperature,
             self.temperaturePump1,
             self.temperaturePump2,
+            self.reconciliation,
         ]
+
+    def get_reconciliation_ui(self):
+        children = []
+        for injector in self.injectors:
+            _children = [
+                ui.NumericVariable(
+                    f"{injector.name}_LDayTotal", 
+                    f"Injector {injector.index} Total Injected Today (L)"
+                ),
+                ui.NumericVariable(
+                    f"{injector.name}_header_LDayTotal", 
+                    f"Header {injector.index} Total Flow Today (L)"
+                ),
+                ui.NumericVariable(
+                    f"{injector.name}CalcedLTotal", 
+                    f"Injector {injector.index} Calced Total (L)"
+                ),
+                ui.NumericVariable(
+                    f"{injector.name}Difference",
+                    f"Injector {injector.index} Difference (%)"
+                )
+            ]
+            children.extend(_children)
+        return children
+    
+    async def update_reconciliation_ui(self):
+        gas_total = 0
+        calced_injected_total = 0
+        actual_injected_total = 0
+        
+        
+        for injector in self.injectors:
+            polling_data = await injector.get_polling_data()
+            LInjectedDayTotal = polling_data[f"TotalInjectedVolumeRatioTodayInject{injector.index}"]
+            LFlowDayTotal = polling_data[f"TotalMainFlowTodayHeader{injector.index}"]
+            VolPerInject = polling_data[f"SPT_VolumePerInject{injector.index}"] #
+            InjectRateInterval = polling_data[f"SPT_RateIntervalInject{injector.index}"] #
+            CalcedLTotal = (LFlowDayTotal /InjectRateInterval)* VolPerInject
+            Difference = (1-(CalcedLTotal / LInjectedDayTotal))*100
+            
+            gas_total += LFlowDayTotal
+            calced_injected_total += CalcedLTotal
+            actual_injected_total += LInjectedDayTotal
+            
+            injector_day_total = f"{injector.name}_LDayTotal"
+            header_day_total = f"{injector.name}_header_LDayTotal"
+            inj_calced_total = f"{injector.name}CalcedLTotal"
+            inj_difference = f"{injector.name}Difference"
+            
+            linjected_day_total = round(LInjectedDayTotal, 2)
+            lflow_day_total = round(LFlowDayTotal, 2)
+            print(f"updating injector {injector.index}")
+            print(f"linjected_day_total: {linjected_day_total}")
+            print(f"lflow_day_total: {lflow_day_total}")
+            print(f"calced_l_total: {CalcedLTotal}")
+            print(f"difference: {Difference}")
+            print("--------------------------------")
+            
+            self.ui_manager.get_element(injector_day_total).update(linjected_day_total)
+            self.ui_manager.get_element(header_day_total).update(lflow_day_total)
+            self.ui_manager.get_element(inj_calced_total).update(round(CalcedLTotal, 2))
+            self.ui_manager.get_element(inj_difference).update(round(Difference, 2))
+            
+        difference = round((1-(calced_injected_total / actual_injected_total))*100, 2)
+        self.ui_manager.get_element("GasTotal").update(round(gas_total, 2))
+        self.ui_manager.get_element("CalcedInjectedTotal").update(round(calced_injected_total, 2))
+        self.ui_manager.get_element("ActualInjectedTotal").update(round(actual_injected_total, 2))
+        self.ui_manager.get_element("Difference").update(difference)
             
     async def update_ui(self):
         """
@@ -269,4 +374,6 @@ class Overview:
         self.temperaturePump2.update(
             await self.get_polling_value("TemperaturePump2")
         )
+        
+        await self.update_reconciliation_ui()
         
