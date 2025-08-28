@@ -6,72 +6,58 @@ import os
 # ---------------------------
 # Configurable inputs
 # ---------------------------
-REPORT_TIME = "03:38:am"
-REPORT_DATE = "28-08-2025"
-SKID_NAME   = "ZN-123"  # e.g., "ZN-123"
-LOGO_PATH   = "ZGH_logon.png.webp"  # set to a local path like "logo.png" if you want to render a logo
 
-INJECTORS = [
-    # id, gasoline (Header Total), act_det (Injection Total), calc_det, diff
-    ("Inj 1CX", "99.69", "102.19", "99.66", "0.03"),
-    ("Inj 2EQ", "99.5",  "104.31", "103.06", "-3.58"),
-    ("Inj 3PL", "104.86","99.05",  "100.91","3.77"),
-    ("Inj 4CX", "99.69", "102.19", "99.66", "0.03"),
-    ("Inj 5EQ", "99.5",  "104.31", "103.06", "-3.58"),
-    ("Inj 6PL", "104.86","99.05",  "100.91","3.77")
-]
-
-TOTALS = {
-    "Gasoline": "305.55",
-    "Calc. Detergent": "303.63",
-    "Act. Detergent": "304.05",
-    "Difference": "0.14",
-}
-
-# Theme
-BRAND_RGB = (2, 158, 87)         # #029E57
-BORDER_RGB = (226, 226, 226)     # #e2e2e2
-MUTED_RGB = (102, 102, 102)      # #666
-CARD_BG = (255, 255, 255)
-PAGE_MARGIN_MM = 16
-
-class PDF(FPDF):
+class PDF(FPDF, skid_name, report_time, report_date):
+    # Theme
+    BRAND_RGB = (2, 158, 87)         # #029E57
+    BORDER_RGB = (226, 226, 226)     # #e2e2e2
+    MUTED_RGB = (102, 102, 102)      # #666
+    CARD_BG = (255, 255, 255)
+    PAGE_MARGIN_MM = 16
+    LOGO_PATH = "ZGH_logon.png.webp"
+    
+    def __init__(self, skid_name, report_time, report_date, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.skid_name = skid_name
+        self.report_time = report_time
+        self.report_date = report_date
+    
     def header(self):
         # three columns: logo | centered title | time/date boxes
-        self.set_xy(PAGE_MARGIN_MM, PAGE_MARGIN_MM)
-        col_w = (210 - 2*PAGE_MARGIN_MM) / 3.0  # A4 width = 210mm
+        self.set_xy(self.PAGE_MARGIN_MM, self.PAGE_MARGIN_MM)
+        col_w = (210 - 2*self.PAGE_MARGIN_MM) / 3.0  # A4 width = 210mm
 
         # Left: Logo (if provided) or placeholder text
-        if LOGO_PATH and os.path.exists(LOGO_PATH):
-            self.image(LOGO_PATH, x=PAGE_MARGIN_MM + (col_w-50)/2, y=PAGE_MARGIN_MM, w=50)
+        if self.LOGO_PATH and os.path.exists(self.LOGO_PATH):
+            self.image(self.LOGO_PATH, x=self.PAGE_MARGIN_MM + (col_w-50)/2, y=self.PAGE_MARGIN_MM, w=50)
         else:
             # simple placeholder
             self.set_font("Helvetica", "B", 20)
             self.set_text_color(40, 130, 90)
-            self.set_xy(PAGE_MARGIN_MM + 5, PAGE_MARGIN_MM + 12)
+            self.set_xy(self.PAGE_MARGIN_MM + 5, self.PAGE_MARGIN_MM + 12)
             self.cell(col_w-10, 10, "Zamil Group", align="C")
 
         # Middle: Title + Skid
         self.set_text_color(0, 0, 0)
-        self.set_xy(PAGE_MARGIN_MM + col_w, PAGE_MARGIN_MM + 2)
+        self.set_xy(self.PAGE_MARGIN_MM + col_w, self.PAGE_MARGIN_MM + 2)
         self.set_font("Helvetica", "B", 16)
         self.cell(col_w, 8, "RECONCILIATION", align="C", new_y="NEXT", new_x="LMARGIN")
         # skid line
-        self.set_xy(PAGE_MARGIN_MM + col_w, PAGE_MARGIN_MM + 12)
+        self.set_xy(self.PAGE_MARGIN_MM + col_w, self.PAGE_MARGIN_MM + 12)
         self.set_font("Helvetica", "", 12)
-        skid_text = f"Skid: {SKID_NAME}" if SKID_NAME else "Skid:"
+        skid_text = f"Skid: {self.skid_name}" if self.skid_name else "Skid:"
         self.cell(col_w, 6, skid_text, align="C")
 
         # Right: Time/Date boxed fields
         def meta(label, value, y):
-            x = PAGE_MARGIN_MM + col_w*2 + 20
+            x = self.PAGE_MARGIN_MM + col_w*2 + 20
             self.set_xy(x-20, y)
             self.set_font("Helvetica", "", 11)
             self.cell(18, 8, f"{label} :", align="R")
             
             # Draw rounded rectangle for the grey box
             radius = 1.5
-            self.set_draw_color(*BORDER_RGB)
+            self.set_draw_color(*self.BORDER_RGB)
             self.set_fill_color(245, 245, 245)
             
             # Draw the rounded rectangle using ellipse method
@@ -98,16 +84,16 @@ class PDF(FPDF):
             self.set_font("Helvetica", "", 11)
             self.cell(30, 5, value, align="C")
 
-        meta("Time", REPORT_TIME, PAGE_MARGIN_MM + 2)
-        meta("Date", REPORT_DATE, PAGE_MARGIN_MM + 12)
+        meta("Time", self.report_time, self.PAGE_MARGIN_MM + 2)
+        meta("Date", self.report_date, self.PAGE_MARGIN_MM + 12)
 
         # Move cursor below header
-        self.set_y(PAGE_MARGIN_MM + 36)
+        self.set_y(self.PAGE_MARGIN_MM + 36)
 
     def rounded_rect(self, x, y, w, h, radius=3):
         # Create rounded rectangle with proper border
-        self.set_draw_color(*BORDER_RGB)
-        self.set_fill_color(*CARD_BG)
+        self.set_draw_color(*self.BORDER_RGB)
+        self.set_fill_color(*self.CARD_BG)
         
         # Draw the main rectangle with rounded corners using ellipse method
         # Top-left corner
@@ -130,9 +116,9 @@ class PDF(FPDF):
         self.line(x + w, y + radius, x + w, y + h - radius)  # right
 
     def divider(self, x1, y, x2):
-        self.set_draw_color(*BRAND_RGB)
+        self.set_draw_color(*self.BRAND_RGB)
         self.line(x1, y, x2, y)
-        self.set_draw_color(*BORDER_RGB)
+        self.set_draw_color(*self.BORDER_RGB)
 
     def label_pair(self, top, bottom, x, y, w):
         self.set_xy(x, y)
@@ -141,12 +127,12 @@ class PDF(FPDF):
         self.cell(w, 4, top, new_y="NEXT")
         self.set_x(x)
         self.set_font("Helvetica", "", 9)
-        self.set_text_color(*MUTED_RGB)
+        self.set_text_color(*self.MUTED_RGB)
         self.cell(w, 4, bottom, new_y="NEXT")
 
     def number_with_unit(self, value, unit, x, y, w, h=8):
         # Single rounded rectangle with value on left and unit on right
-        self.set_draw_color(*BORDER_RGB)
+        self.set_draw_color(*self.BORDER_RGB)
         self.set_fill_color(248, 248, 248)
         
         # Draw rounded rectangle using ellipse method
@@ -179,17 +165,38 @@ class PDF(FPDF):
         # Unit on the right
         self.set_xy(x+w-10, y+1.4)
         self.set_font("Helvetica", "", 10)
-        self.set_text_color(*MUTED_RGB)
+        self.set_text_color(*self.MUTED_RGB)
         self.cell(8, h-2.8, unit, align="R")
 
-def build_pdf(out_path="d8fbeab0-1e72-485e-8f55-a4bee9af0ac4.pdf"):
-    pdf = PDF(format="A4", unit="mm")
-    pdf.set_auto_page_break(auto=True, margin=PAGE_MARGIN_MM)
+def build_pdf(context: dict, out_path="d8fbeab0-1e72-485e-8f55-a4bee9af0ac4.pdf"):
+    skid_name = context["skid_name"]
+    report_time = context["report_time"]
+    report_date = context["report_date"]
+    
+    INJECTORS = [
+        # id, gasoline (Header Total), act_det (Injection Total), calc_det, diff
+        ("Inj 1CX", "99.69", "102.19", "99.66", "0.03"),
+        ("Inj 2EQ", "99.5",  "104.31", "103.06", "-3.58"),
+        ("Inj 3PL", "104.86","99.05",  "100.91","3.77"),
+        ("Inj 4CX", "99.69", "102.19", "99.66", "0.03"),
+        ("Inj 5EQ", "99.5",  "104.31", "103.06", "-3.58"),
+        ("Inj 6PL", "104.86","99.05",  "100.91","3.77")
+    ]
+
+    TOTALS = {
+        "Gasoline": "305.55",
+        "Calc. Detergent": "303.63",
+        "Act. Detergent": "304.05",
+        "Difference": "0.14",
+    }
+    
+    pdf = PDF(skid_name, report_time, report_date, format="A4", unit="mm")
+    pdf.set_auto_page_break(auto=True, margin=pdf.PAGE_MARGIN_MM)
     pdf.add_page()
 
     # Card grid: 2 columns x N rows (here 6 cards -> 3 rows)
-    left = PAGE_MARGIN_MM
-    right = 210 - PAGE_MARGIN_MM
+    left = pdf.PAGE_MARGIN_MM
+    right = 210 - pdf.PAGE_MARGIN_MM
     gutter = 6
     card_w = (right - left - gutter) / 2.0
     card_h = 54
