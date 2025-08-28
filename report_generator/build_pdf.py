@@ -182,7 +182,7 @@ class PDF(FPDF):
         self.set_text_color(*MUTED_RGB)
         self.cell(8, h-2.8, unit, align="R")
 
-def build_pdf(out_path="d8fbeab0-1e72-485e-8f55-a4bee9af0ac4.pdf"):
+def build_pdf(out_path="Fuel Additive Demo.pdf"):
     pdf = PDF(format="A4", unit="mm")
     pdf.set_auto_page_break(auto=True, margin=PAGE_MARGIN_MM)
     pdf.add_page()
