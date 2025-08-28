@@ -168,6 +168,7 @@ class PDF(FPDF, skid_name, report_time, report_date):
         self.set_text_color(*self.MUTED_RGB)
         self.cell(8, h-2.8, unit, align="R")
 
+<<<<<<< HEAD
 def build_pdf(context: dict, out_path="d8fbeab0-1e72-485e-8f55-a4bee9af0ac4.pdf"):
     skid_name = context["skid_name"]
     report_time = context["report_time"]
@@ -192,6 +193,11 @@ def build_pdf(context: dict, out_path="d8fbeab0-1e72-485e-8f55-a4bee9af0ac4.pdf"
     
     pdf = PDF(skid_name, report_time, report_date, format="A4", unit="mm")
     pdf.set_auto_page_break(auto=True, margin=pdf.PAGE_MARGIN_MM)
+=======
+def build_pdf(out_path="Fuel Additive Demo.pdf"):
+    pdf = PDF(format="A4", unit="mm")
+    pdf.set_auto_page_break(auto=True, margin=PAGE_MARGIN_MM)
+>>>>>>> 72df8685865afb15f646db1f090f429908222670
     pdf.add_page()
 
     # Card grid: 2 columns x N rows (here 6 cards -> 3 rows)

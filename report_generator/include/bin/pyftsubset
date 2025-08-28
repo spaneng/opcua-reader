@@ -1,4 +1,4 @@
-#!/Users/jarrod/Documents/span/apps/opcua-reader/report_generator/.venv/bin/python3
+#!/home/jarrod/Documents/span/opcua-reader/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import sys
 from fontTools.subset import main
