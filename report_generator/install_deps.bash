@@ -10,6 +10,8 @@ touch include/__init__.py
 uv pip install --target=./include/ tzlocal
 uv pip install --target=./include/ pydoover
 uv pip install --target=./include/ fpdf2
+uv pip install --target=./include/ fonttools
+uv pip install --target=./include/ pillow
 
 #uv pip install --target=./include/ git+https://github.com/spaneng/pydoover.git
 

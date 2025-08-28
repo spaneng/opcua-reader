@@ -9,7 +9,6 @@ if not include_dir in sys.path:
     sys.path.append(include_dir)
     
 from pydoover.reports.base import ReportGenerator
-from jinja2 import Template
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -33,10 +32,6 @@ def find_reconciliation(obj, target_key="Reconciliation"):
 class InjectorReportGenerator(ReportGenerator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # DocRaptor API key - you'll need to set this as an environment variable
-        self.docraptor_api_key = os.getenv('DOCRAPTOR_API_KEY')
-        if not self.docraptor_api_key:
-            raise ValueError("DOCRAPTOR_API_KEY environment variable is required")
     
     def retrieve_report_data(self):
         series, msgs = super().retrieve_report_data()
