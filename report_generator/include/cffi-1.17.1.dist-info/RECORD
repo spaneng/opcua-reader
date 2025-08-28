@@ -1,11 +1,11 @@
-_cffi_backend.cpython-311-aarch64-linux-gnu.so,sha256=5rCvFVM4c5_YVlbG916uH6AO8Xcf2ReLWqO6WD0vTGs,1187880
+_cffi_backend.cpython-311-darwin.so,sha256=DjqfLjfbFpvk5tGEwKGhgNUhe2gwwcabEfuL-tT1qXU,216112
 cffi-1.17.1.dist-info/INSTALLER,sha256=5hhM4Q4mYTT9z6QB6PGpUAW81PGNFrYrdXMj4oM_6ak,2
-cffi-1.17.1.dist-info/LICENSE,sha256=BLgPWwd7vtaICM_rreteNSPyqMmpZJXFh72W3x6sKjM,1294
-cffi-1.17.1.dist-info/METADATA,sha256=u6nuvP_qPJKu2zvIbi2zkGzVu7KjnnRIYUFyIrOY3j4,1531
+cffi-1.17.1.dist-info/METADATA,sha256=PqUu9QRUeJ1fNR1oBkgFOMYYtMsYf2HCaIpbtI60gIQ,1733
 cffi-1.17.1.dist-info/RECORD,,
 cffi-1.17.1.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
-cffi-1.17.1.dist-info/WHEEL,sha256=wbO1i3AcMQi8f3dFCEBZkYw8Qggr2nZZUFSIRhHanFM,153
+cffi-1.17.1.dist-info/WHEEL,sha256=qxQkdhERtGxJzqnVOBnucx1aUmU2n3HmuzYdln_LyOw,109
 cffi-1.17.1.dist-info/entry_points.txt,sha256=y6jTxnyeuLnL-XJcDv8uML3n6wyYiGRg8MTp_QGJ9Ho,75
+cffi-1.17.1.dist-info/licenses/LICENSE,sha256=BLgPWwd7vtaICM_rreteNSPyqMmpZJXFh72W3x6sKjM,1294
 cffi-1.17.1.dist-info/top_level.txt,sha256=rE7WR3rZfNKxWI9-jn6hsHCAl7MDkB-FmuQbxWjFehQ,19
 cffi/__init__.py,sha256=H6t_ebva6EeHpUuItFLW1gbRp94eZRNJODLaWKdbx1I,513
 cffi/_cffi_errors.h,sha256=zQXt7uR_m8gUW-fI2hJg0KoSkJFwXv8RGUkEDZ177dQ,3908

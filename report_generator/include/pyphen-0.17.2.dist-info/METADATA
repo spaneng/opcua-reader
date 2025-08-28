@@ -1,4 +1,4 @@
-Metadata-Version: 2.3
+Metadata-Version: 2.4
 Name: pyphen
 Version: 0.17.2
 Summary: Pure Python module to hyphenate text
@@ -23,6 +23,10 @@ Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: Topic :: Text Processing
 Classifier: Topic :: Text Processing :: Linguistic
+License-File: COPYING.GPL
+License-File: COPYING.LGPL
+License-File: COPYING.MPL
+License-File: LICENSE
 Requires-Dist: sphinx ; extra == "doc"
 Requires-Dist: sphinx_rtd_theme ; extra == "doc"
 Requires-Dist: pytest ; extra == "test"
