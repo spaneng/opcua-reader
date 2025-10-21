@@ -156,7 +156,7 @@ class Overview:
         
     async def poll_polling_alarm_nodes(self):
         for node in self.polling_alarm_nodes:
-            value = await self.client.get_node_id_val(node.node_id)
+            value = await self.client.get_node_id_val(node.active_id)
             log.info(f"Polling alarm node {node.name_base}: {value}")
             last_result = self.polling_node_values.get(node.name_base, True)
             if value in ["True", True, 1] and not last_result:
