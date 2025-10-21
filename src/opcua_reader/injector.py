@@ -174,7 +174,7 @@ class Injector:
         self.set_report_nodes()
         node_ids = [node.node_id for node in self.polling_nodes + self.report_nodes]
         await self.client.register_nodes(node_ids)
-        await self.create_report_sub()
+        # await self.create_report_sub()
         
     async def add_data_entry(self, data: dict):
         await self.table_manager.add_data_entry(self.name, data)
@@ -191,10 +191,16 @@ class Injector:
         try:
             start_string = data.get(f"BatchStartTime{self.index}", None)
             logging.info(f"******* Start string: {start_string}")
+            try:
+                dt_utc = datetime.fromisoformat(start_string.replace("Z", "+00:00"))
+            except Exception as e:
+                print(f"Error parsing ISO format: {e}")
             # Parse format like "21-Oct-2025, 14:43:40"
-            dt_naive = datetime.strptime(start_string, "%d-%b-%Y, %H:%M:%S")
-            # Assume it's in UTC and convert to local timezone
-            dt_utc = dt_naive.replace(tzinfo=ZoneInfo("UTC"))
+            
+                dt_naive = datetime.strptime(start_string, "%d-%b-%Y, %H:%M:%S")
+                # Assume it's in UTC and convert to local timezone
+                dt_utc = dt_naive.replace(tzinfo=ZoneInfo("UTC"))
+            
             dt_local = dt_utc.astimezone(ZoneInfo(self.timezone))
             dt_local_str = dt_local.strftime("%I:%M:%S %p")
         except Exception as e:
