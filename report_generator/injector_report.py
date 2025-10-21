@@ -47,7 +47,7 @@ class InjectorReportGenerator(ReportGenerator):
         self.add_to_log(f"Generating report for {agent_display_name}...")
         context = self.get_context(agent_id)
         # self.generate_report(context, agent_id)
-        build_pdf(context, f"{agent_id}.pdf")
+        build_pdf(context, f"{self.get_agent_display_name(agent_id)}.pdf")
         
     def get_context(self, agent_id: str):
         context = {
