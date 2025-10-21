@@ -65,7 +65,7 @@ class InjectorReportGenerator(ReportGenerator):
         context["report_time"] = report_time
         
         # skid name
-        context["skid_name"] = reconciliation_state["skid_name"]
+        context["skid_name"] = self.get_agent_display_name(agent_id)
         
         # injectors
         for injector in reconciliation_state["injectors"]:
