@@ -22,7 +22,7 @@ class Node:
         self.node_id = f'ns=3;s="DB_OPCUA_Report"."{self.name}"'
 
 class Injector:
-    REPORT_SUB_NODE = "BatchStartTime"
+    REPORT_SUB_NODE = "BatchEndTime"
     REPORT_NODE_NAME_BASES =[
         "BatchEndTime",
         "BatchStartTime",
@@ -90,10 +90,10 @@ class Injector:
     
     TABLE_HEADER_DISPLAY_NAMES = {
         "a": "Start Time", # 
-        "b": "Duration", # 
+        "b": "Dur. (H:M:S)", # 
         "c": "Actual Inject (L)", #
         "d": "Calc'd Inject (L)", #
-        "e": "Difference (%)", #
+        "e": "Diff. (%)", #
         "f": "Header Volume (L)" #
     }
     
