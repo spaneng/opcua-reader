@@ -39,6 +39,25 @@ class PollingNode:
         
 
 class Overview:
+    _polling_alarm_node_name_bases = [
+        60,
+        61,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78
+    ]
+    
     _alarm_sub_node_name_bases = [
         1,
         3,
@@ -66,23 +85,6 @@ class Overview:
         50,
         51,
         56,
-        60,
-        61,
-        65,
-        66,
-        67,
-        68,
-        # 69,
-        # 70,
-        # 71,
-        # 72,
-        73,
-        74,
-        # 75,
-        # 76,
-        # 77,
-        # 78
-        
     ]
     _warning_node_name_bases = [
         11,
@@ -130,6 +132,8 @@ class Overview:
         self.timezone = timezone
         self.skid_name = skid_name
         
+        self.polling_node_values = {}
+        
     def set_polling_nodes(self):
         nodes = []
         for node_base in self._polling_node_name_bases:
@@ -142,6 +146,31 @@ class Overview:
         for obj in self.alarm_objs:
             node_ids.extend(obj.get_node_ids())
         return node_ids
+    
+    def set_polling_alarm_nodes(self):
+        nodes = []
+        for node_base in self._polling_alarm_node_name_bases:
+            node = AlarmObj(node_base)
+            nodes.append(node)
+        self.polling_alarm_nodes = nodes
+        
+    async def poll_polling_alarm_nodes(self):
+        for node in self.polling_alarm_nodes:
+            value = await self.client.get_node_id_val(node.node_id)
+            log.info(f"Polling alarm node {node.name_base}: {value}")
+            last_result = self.polling_node_values.get(node.name_base, True)
+            if value in ["True", True, 1] and not last_result:
+                alarm_type = node.heading
+                log.warning(f"Received polling {alarm_type} for node {node.name_base}.")
+                alarm_text = await self.client.get_node_id_val(node.alarm_text_id)
+                timestamp = await self.client.get_node_id_val(node.timestamp_id)
+                code = await self.client.get_node_id_val(node.code_id)
+                
+                await self.dda.publish_to_channel(
+                    "significantEvent",
+                    f"{alarm_type}: {alarm_text} at {timestamp} with code {code}",
+                )
+            self.polling_node_values[node.name_base] = value
     
     def get_polling_node_ids(self):
         return [node.node_id for node in self.polling_nodes]
@@ -173,6 +202,7 @@ class Overview:
         
         await self.client.register_nodes(node_ids)
         await self.create_alarm_subs()
+        await self.set_polling_alarm_nodes()
         
         # main loop -> get polling data and push to ui
         
@@ -226,6 +256,7 @@ class Overview:
     
     async def main_loop(self):
         await self.update_ui()
+        await self.poll_alarms()
         
     def fetch_ui(self):
         """
