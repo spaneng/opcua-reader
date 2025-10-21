@@ -140,6 +140,16 @@ class Overview:
         for node_base in self._warning_node_name_bases:
             node = AlarmObj(node_base,  obj_name="Warnings")
             nodes.append(node)
+        
+        for node in nodes:
+            print(f"node.name_base: {node.name_base}")
+            print(f"node.active_id: {node.active_id}")
+            print(f"node.timestamp_id: {node.timestamp_id}")
+            print(f"node.alarm_text_id: {node.alarm_text_id}")
+            print(f"node.code_id: {node.code_id}")
+        # print("-------- Alarm Objs --------")
+        # print(f"{nodes}")
+        
         self.alarm_objs = nodes
         
     async def setup(self):
@@ -165,6 +175,7 @@ class Overview:
                 code = await self.client.get_node_id_val(node_obj.code_id)
                 
                 log.info(f"Alarm triggered: {alarm_text} at {timestamp} with code {code}.")
+                print(f"Alarm triggered: {alarm_text} at {timestamp} with code {code}.")
                 
                 await self.dda.publish_to_channel(
                     "significantEvent",
@@ -355,12 +366,12 @@ class Overview:
             
             linjected_day_total = round(LInjectedDayTotal, 2)
             lflow_day_total = round(LFlowDayTotal, 2)
-            print(f"updating injector {injector.index}")
-            print(f"linjected_day_total: {linjected_day_total}")
-            print(f"lflow_day_total: {lflow_day_total}")
-            print(f"calced_l_total: {CalcedLTotal}")
-            print(f"difference: {Difference}")
-            print("--------------------------------")
+            # print(f"updating injector {injector.index}")
+            # print(f"linjected_day_total: {linjected_day_total}")
+            # print(f"lflow_day_total: {lflow_day_total}")
+            # print(f"calced_l_total: {CalcedLTotal}")
+            # print(f"difference: {Difference}")
+            # print("--------------------------------")
             
             self.ui_manager.get_element(injector_day_total).update(linjected_day_total)
             self.ui_manager.get_element(header_day_total).update(lflow_day_total)
