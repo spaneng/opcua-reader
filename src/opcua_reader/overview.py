@@ -69,7 +69,8 @@ class Overview:
         60,
         61,
         65,
-        66
+        66,
+        67
     ]
     _warning_node_name_bases = [
         11,
