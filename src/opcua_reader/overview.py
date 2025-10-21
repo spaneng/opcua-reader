@@ -256,7 +256,7 @@ class Overview:
     
     async def main_loop(self):
         await self.update_ui()
-        await self.poll_alarms()
+        await self.poll_polling_alarm_nodes()
         
     def fetch_ui(self):
         """
