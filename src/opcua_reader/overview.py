@@ -14,6 +14,7 @@ class AlarmObj: #can be either a warning or an alarm
         self.name_base = name_base
         
         self.obj_name = obj_name
+        self.heading = obj_name[:-1] if obj_name.endswith(('s', 'S')) else obj_name
         server_obj_name = obj_name
         if obj_name == "Alarms":
             server_obj_name = "Alams"
@@ -179,7 +180,7 @@ class Overview:
                 
                 await self.dda.publish_to_channel(
                     "significantEvent",
-                    f"Alarm: {alarm_text} at {timestamp} with code {code}",
+                    f"{node_obj.heading}: {alarm_text} at {timestamp} with code {code}",
                 )
 
         return alarm_sub_cb
