@@ -169,18 +169,19 @@ class Overview:
             Callback for the alarm subscription.
             """
             if val in ["True", True, 1]:
-                log.warning(f"Received Alarm for node {node_obj.name_base}.")
+                alarm_type = node_obj.heading
+                log.warning(f"Received {alarm_type} for node {node_obj.name_base}.")
                 
                 alarm_text = await self.client.get_node_id_val(node_obj.alarm_text_id)
                 timestamp = await self.client.get_node_id_val(node_obj.timestamp_id)
                 code = await self.client.get_node_id_val(node_obj.code_id)
                 
-                log.info(f"Alarm triggered: {alarm_text} at {timestamp} with code {code}.")
-                print(f"Alarm triggered: {alarm_text} at {timestamp} with code {code}.")
+                log.info(f"{alarm_type} triggered: {alarm_text} at {timestamp} with code {code}.")
+                print(f"{alarm_type} triggered: {alarm_text} at {timestamp} with code {code}.")
                 
                 await self.dda.publish_to_channel(
                     "significantEvent",
-                    f"{node_obj.heading}: {alarm_text} at {timestamp} with code {code}",
+                    f"{alarm_type}: {alarm_text} at {timestamp} with code {code}",
                 )
 
         return alarm_sub_cb
