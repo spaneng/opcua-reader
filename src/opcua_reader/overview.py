@@ -202,7 +202,7 @@ class Overview:
         
         await self.client.register_nodes(node_ids)
         await self.create_alarm_subs()
-        await self.set_polling_alarm_nodes()
+        self.set_polling_alarm_nodes()
         
         # main loop -> get polling data and push to ui
         
