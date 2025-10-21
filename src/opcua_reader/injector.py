@@ -191,7 +191,10 @@ class Injector:
         try:
             start_string = data.get(f"BatchStartTime{self.index}", None)
             logging.info(f"******* Start string: {start_string}")
-            dt_utc = datetime.fromisoformat(start_string.replace("Z", "+00:00"))
+            # Parse format like "21-Oct-2025, 14:43:40"
+            dt_naive = datetime.strptime(start_string, "%d-%b-%Y, %H:%M:%S")
+            # Assume it's in UTC and convert to local timezone
+            dt_utc = dt_naive.replace(tzinfo=ZoneInfo("UTC"))
             dt_local = dt_utc.astimezone(ZoneInfo(self.timezone))
             dt_local_str = dt_local.strftime("%I:%M:%S %p")
         except Exception as e:
