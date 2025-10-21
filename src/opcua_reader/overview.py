@@ -53,9 +53,9 @@ class Overview:
         73,
         74,
         75,
-        76,
-        77,
-        78
+        # 76,
+        # 77,
+        # 78
     ]
     
     _alarm_sub_node_name_bases = [
