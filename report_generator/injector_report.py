@@ -47,7 +47,7 @@ class InjectorReportGenerator(ReportGenerator):
         self.add_to_log(f"Generating report for {agent_display_name}...")
         context = self.get_context(agent_id)
         # self.generate_report(context, agent_id)
-        build_pdf()
+        build_pdf(context, f"{agent_id}.pdf")
         
     def get_context(self, agent_id: str):
         context = {
@@ -73,8 +73,8 @@ class InjectorReportGenerator(ReportGenerator):
             injector_display_name = injector["displayName"]
             injector_index = injector["index"]
             
-            flowmeter_total_name = f"{injector_name}_LDayTotal"
-            actual_injection_detergent_name = f"{injector_name}_header_LDayTotal"
+            flowmeter_total_name = f"{injector_name}_header_LDayTotal"
+            actual_injection_detergent_name = f"{injector_name}_LDayTotal"
             calculated_detergent_name = f"{injector_name}CalcedLTotal"
             difference_name = f"{injector_name}Difference"
             

@@ -7,7 +7,7 @@ import os
 # Configurable inputs
 # ---------------------------
 
-class PDF(FPDF, skid_name, report_time, report_date):
+class PDF(FPDF):
     # Theme
     BRAND_RGB = (2, 158, 87)         # #029E57
     BORDER_RGB = (226, 226, 226)     # #e2e2e2
@@ -168,36 +168,30 @@ class PDF(FPDF, skid_name, report_time, report_date):
         self.set_text_color(*self.MUTED_RGB)
         self.cell(8, h-2.8, unit, align="R")
 
-<<<<<<< HEAD
 def build_pdf(context: dict, out_path="d8fbeab0-1e72-485e-8f55-a4bee9af0ac4.pdf"):
     skid_name = context["skid_name"]
     report_time = context["report_time"]
     report_date = context["report_date"]
     
-    INJECTORS = [
-        # id, gasoline (Header Total), act_det (Injection Total), calc_det, diff
-        ("Inj 1CX", "99.69", "102.19", "99.66", "0.03"),
-        ("Inj 2EQ", "99.5",  "104.31", "103.06", "-3.58"),
-        ("Inj 3PL", "104.86","99.05",  "100.91","3.77"),
-        ("Inj 4CX", "99.69", "102.19", "99.66", "0.03"),
-        ("Inj 5EQ", "99.5",  "104.31", "103.06", "-3.58"),
-        ("Inj 6PL", "104.86","99.05",  "100.91","3.77")
-    ]
+    INJECTORS = []
+    for injector in context["injectors"]:
+        INJECTORS.append((
+            injector["injector_name"], 
+            str(injector["flowmeter_total"]), 
+            str(injector["actual_injection_detergent"]), 
+            str(injector["calculated_detergent"]), 
+            str(injector["difference"])
+        ))
 
     TOTALS = {
-        "Gasoline": "305.55",
-        "Calc. Detergent": "303.63",
-        "Act. Detergent": "304.05",
-        "Difference": "0.14",
+        "Gasoline": str(context["total_gasoline"]),
+        "Calc. Detergent": str(context["total_calculated_detergent"]),
+        "Act. Detergent": str(context["total_actual_detergent_injected"]),
+        "Difference": str(context["difference"]),
     }
     
     pdf = PDF(skid_name, report_time, report_date, format="A4", unit="mm")
     pdf.set_auto_page_break(auto=True, margin=pdf.PAGE_MARGIN_MM)
-=======
-def build_pdf(out_path="Fuel Additive Demo.pdf"):
-    pdf = PDF(format="A4", unit="mm")
-    pdf.set_auto_page_break(auto=True, margin=PAGE_MARGIN_MM)
->>>>>>> 72df8685865afb15f646db1f090f429908222670
     pdf.add_page()
 
     # Card grid: 2 columns x N rows (here 6 cards -> 3 rows)
