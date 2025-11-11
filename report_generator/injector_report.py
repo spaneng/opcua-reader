@@ -9,7 +9,7 @@ if not include_dir in sys.path:
     sys.path.append(include_dir)
     
 from pydoover.reports.base import ReportGenerator
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 def find_reconciliation(obj, target_key="Reconciliation"):
@@ -53,14 +53,22 @@ class InjectorReportGenerator(ReportGenerator):
         context = {
             "injectors":[]
         }
-        agg = self.get_current_data_aggregate(agent_id)
-        reconciliation_state = find_reconciliation(agg["state"])
+        report_gen_time = self.period_to
+        
+        self.period_from = self.period_to - timedelta(minutes=60)
+        data = self.retrieve_data(self.period_from, self.period_to, agent_id)
+        print("data length: ", len(data))
+        data = data[-1]["payload"]
+        reconciliation_state = find_reconciliation(data["state"])
         children = reconciliation_state["children"]
         
         # date and time
-        now = datetime.now(ZoneInfo(reconciliation_state["timezone"]))
-        report_date = now.strftime("%d-%m-%Y")
-        report_time = now.strftime("%I:%M:%p").lower()
+        # time on the report used to be when the report was generated.
+        # now = datetime.now(ZoneInfo(reconciliation_state["timezone"]))
+        # report_gen_time_saudi = self.period_to.astimezone(ZoneInfo("Asia/Riyadh"))
+        report_gen_time_saudi = self.period_to
+        report_date = report_gen_time_saudi.strftime("%d-%m-%Y")
+        report_time = report_gen_time_saudi.strftime("%I:%M:%p").lower()
         context["report_date"] = report_date
         context["report_time"] = report_time
         
