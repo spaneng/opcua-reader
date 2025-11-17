@@ -65,8 +65,8 @@ class InjectorReportGenerator(ReportGenerator):
         # date and time
         # time on the report used to be when the report was generated.
         # now = datetime.now(ZoneInfo(reconciliation_state["timezone"]))
-        # report_gen_time_saudi = self.period_to.astimezone(ZoneInfo("Asia/Riyadh"))
-        report_gen_time_saudi = self.period_to
+        report_gen_time_saudi = self.period_to.astimezone(ZoneInfo("Asia/Riyadh"))
+        # report_gen_time_saudi = self.period_to
         report_date = report_gen_time_saudi.strftime("%d-%m-%Y")
         report_time = report_gen_time_saudi.strftime("%I:%M:%p").lower()
         context["report_date"] = report_date
