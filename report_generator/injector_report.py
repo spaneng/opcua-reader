@@ -56,8 +56,13 @@ class InjectorReportGenerator(ReportGenerator):
         report_gen_time = self.period_to
         
         self.period_from = self.period_to - timedelta(minutes=60)
-        data = self.retrieve_data(self.period_from, self.period_to, agent_id)
-        print("data length: ", len(data))
+        # print("period_from: ", self.period_from)
+        # print("period_to: ", self.period_to)
+        
+        # print("period_from timestamp (for self.timezone): ", self.period_from.astimezone(self.for_timezone).timestamp())
+        # print("period_to timestamp (for self.timezone): ", self.period_to.astimezone(self.for_timezone).timestamp())
+        
+        data = self.retrieve_data(self.period_from.astimezone(self.for_timezone), self.period_to.astimezone(self.for_timezone), agent_id)
         data = data[-1]["payload"]
         reconciliation_state = find_reconciliation(data["state"])
         children = reconciliation_state["children"]
