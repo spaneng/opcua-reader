@@ -54,8 +54,8 @@ class InjectorReportGenerator(ReportGenerator):
             "injectors":[]
         }
         report_gen_time = self.period_to
-        
-        self.period_from = self.period_to - timedelta(minutes=60)
+        self.period_to = self.period_to + timedelta(days=1) - timedelta(hours=1)
+        self.period_from = self.period_to - timedelta(minutes=120)
         # print("period_from: ", self.period_from)
         # print("period_to: ", self.period_to)
         
