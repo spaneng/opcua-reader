@@ -54,15 +54,15 @@ class InjectorReportGenerator(ReportGenerator):
             "injectors":[]
         }
         report_gen_time = self.period_to
-        self.period_to = self.period_to + timedelta(days=1) - timedelta(hours=1)
-        self.period_from = self.period_to - timedelta(minutes=120)
+        period_to = self.period_to + timedelta(days=1) - timedelta(hours=1)
+        period_from = self.period_to - timedelta(minutes=120)
         # print("period_from: ", self.period_from)
         # print("period_to: ", self.period_to)
         
         # print("period_from timestamp (for self.timezone): ", self.period_from.astimezone(self.for_timezone).timestamp())
         # print("period_to timestamp (for self.timezone): ", self.period_to.astimezone(self.for_timezone).timestamp())
         
-        data = self.retrieve_data(self.period_from.astimezone(self.for_timezone), self.period_to.astimezone(self.for_timezone), agent_id)
+        data = self.retrieve_data(period_from.astimezone(self.for_timezone), period_to.astimezone(self.for_timezone), agent_id)
         data = data[-1]["payload"]
         reconciliation_state = find_reconciliation(data["state"])
         children = reconciliation_state["children"]
@@ -70,7 +70,7 @@ class InjectorReportGenerator(ReportGenerator):
         # date and time
         # time on the report used to be when the report was generated.
         # now = datetime.now(ZoneInfo(reconciliation_state["timezone"]))
-        report_gen_time_saudi = self.period_to.astimezone(ZoneInfo("Asia/Riyadh"))
+        report_gen_time_saudi = period_to.astimezone(ZoneInfo("Asia/Riyadh"))
         # report_gen_time_saudi = self.period_to
         report_date = report_gen_time_saudi.strftime("%d-%m-%Y")
         report_time = report_gen_time_saudi.strftime("%I:%M:%p").lower()
