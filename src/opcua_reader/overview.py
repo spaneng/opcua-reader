@@ -36,27 +36,11 @@ class PollingNode:
         self.name_base = name_base
         self.name = f"{name_base}"
         self.node_id = f'ns=3;s="DB_OPCUA_AnalogValues"."{self.name_base}"'
-        
 
 class Overview:
-    _polling_alarm_node_name_bases = [
-        60,
-        61,
-        65,
-        66,
-        67,
-        68,
-        69,
-        70,
-        71,
-        72,
-        73,
-        74,
-        75,
-        # 76,
-        # 77,
-        # 78
-    ]
+    
+    # Alarms list found at: 
+    # - opcua-reader/src/opcua_reader/Alarms Configuration PLC(DiscreteAlarms).csv
     
     _alarm_sub_node_name_bases = [
         1,
@@ -84,7 +68,28 @@ class Overview:
         45,
         50,
         51,
+        52,
+        53,
+        54,
+        55,
         56,
+        57,
+        60,
+        61,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78
     ]
     _warning_node_name_bases = [
         11,
@@ -147,31 +152,6 @@ class Overview:
             node_ids.extend(obj.get_node_ids())
         return node_ids
     
-    def set_polling_alarm_nodes(self):
-        nodes = []
-        for node_base in self._polling_alarm_node_name_bases:
-            node = AlarmObj(node_base)
-            nodes.append(node)
-        self.polling_alarm_nodes = nodes
-        
-    async def poll_polling_alarm_nodes(self):
-        for node in self.polling_alarm_nodes:
-            value = await self.client.get_node_id_val(node.active_id)
-            # log.info(f"Polling alarm node {node.name_base}: {value}")
-            last_result = self.polling_node_values.get(node.name_base, True)
-            if value in ["True", True, 1] and not last_result:
-                alarm_type = node.heading
-                log.warning(f"Received polling {alarm_type} for node {node.name_base}.")
-                alarm_text = await self.client.get_node_id_val(node.alarm_text_id)
-                timestamp = await self.client.get_node_id_val(node.timestamp_id)
-                code = await self.client.get_node_id_val(node.code_id)
-                
-                await self.dda.publish_to_channel(
-                    "significantEvent",
-                    f"{alarm_type}: {alarm_text} at {timestamp} with code {code}",
-                )
-            self.polling_node_values[node.name_base] = value
-    
     def get_polling_node_ids(self):
         return [node.node_id for node in self.polling_nodes]
     
@@ -202,7 +182,6 @@ class Overview:
         
         await self.client.register_nodes(node_ids)
         await self.create_alarm_subs()
-        self.set_polling_alarm_nodes()
         
         # main loop -> get polling data and push to ui
         
@@ -231,19 +210,39 @@ class Overview:
 
     async def create_alarm_subs(self):
         """
-        Create a subscription for the nodes.
+        Create a shared subscription for all alarm nodes.
+        Using a single subscription with optimized parameters helps prevent
+        "Subscription state changed (Late)" errors on the PLC.
         """
-        print("Creating alarm subscriptions for nodes...")
+        print("Creating shared alarm subscription for nodes...")
         print(f"Alarm nodes: {self.alarm_objs}")
+        
+        # Build dictionary of node_id -> callback for shared subscription
+        node_callbacks = {}
         for node_obj in self.alarm_objs:
-            print(f"Creating subscription for {node_obj.name_base}...")
             sub_node_id = node_obj.active_id
+            print(f"Preparing subscription for {node_obj.name_base}...")
             print(f"Subscription node ID: {sub_node_id}")
             alarm_sub_cb = await self.get_alarm_sub_cb(node_obj)
-            print(f"Alarm subscription callback: {alarm_sub_cb}")
-            await self.client.add_subscription(sub_node_id, alarm_sub_cb)
-            print(f"Alarm subscriptions create for {sub_node_id}")
-            logging.info(f"Alarm subscription created for {node_obj.name_base}.")
+            node_callbacks[sub_node_id] = alarm_sub_cb
+            print(f"Alarm subscription callback prepared for {sub_node_id}")
+        
+        # Create a single shared subscription with optimized parameters
+        # Publishing interval: 1000ms (1 second) - gives server time to process
+        # Lifetime count: 20000 - allows subscription to survive longer periods
+        # Max keep-alive: 10000 - ensures connection stays alive
+        try:
+            await self.client.create_shared_subscription(
+                node_callbacks,
+                publishing_interval=1000,  # 1 second publishing interval
+                lifetime_count=20000,     # Higher lifetime count
+                max_keep_alive_count=10000  # Higher keep-alive count
+            )
+            print(f"Shared alarm subscription created for {len(node_callbacks)} nodes")
+            logging.info(f"Shared alarm subscription created for {len(self.alarm_objs)} alarm nodes.")
+        except Exception as e:
+            log.error(f"Error creating shared alarm subscription: {e}")
+            raise
     
     async def get_polling_value(self, name: str):
         """
@@ -256,7 +255,6 @@ class Overview:
     
     async def main_loop(self):
         await self.update_ui()
-        await self.poll_polling_alarm_nodes()
         
     def fetch_ui(self):
         """
