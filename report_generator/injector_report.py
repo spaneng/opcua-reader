@@ -2,6 +2,7 @@ import os
 import sys
 
 from build_pdf import build_pdf
+import logging
 
 ## Add the include directory to the path if it is not already there.
 include_dir = os.path.join(os.path.dirname(__file__), 'include')
@@ -11,6 +12,36 @@ if not include_dir in sys.path:
 from pydoover.reports.base import ReportGenerator
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
+logging_level = logging.INFO
+
+# Use a named logger for this module
+log = logging.getLogger('injector_report')
+log.setLevel(logging_level)
+log.propagate = False  # Prevent propagation to root logger
+
+# Add a handler with a filter to only show logs from this module
+if not log.handlers:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging_level)
+    
+    # Filter to only show logs from injector_report module
+    class ModuleFilter(logging.Filter):
+        def filter(self, record):
+            return record.name == 'injector_report'
+    
+    handler.addFilter(ModuleFilter())
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+
+def unix_to_riyadh_datetime(ts: int | float, fmt: str = "%Y-%m-%d %H:%M:%S"):
+    """
+    Convert a Unix timestamp to a formatted datetime string in Asia/Riyadh timezone.
+    """
+    dt_utc = datetime.fromtimestamp(ts, tz=ZoneInfo("UTC"))
+    dt_riyadh = dt_utc.astimezone(ZoneInfo("Asia/Riyadh"))
+    return dt_riyadh.strftime(fmt)
 
 def find_reconciliation(obj, target_key="Reconciliation"):
         """
@@ -50,28 +81,24 @@ class InjectorReportGenerator(ReportGenerator):
         build_pdf(context, f"{self.get_agent_display_name(agent_id)}.pdf")
         
     def get_context(self, agent_id: str):
+        '''
+        This function gets context for report. 
+        
+        For context (lol):
+            The data for the report is cleared at midnight by the PLC. 
+            Therefore we iterate back through the data to find the last 
+            injection of the day.
+        '''
+        
         context = {
             "injectors":[]
         }
-        report_gen_time = self.period_to
         period_to = self.period_to + timedelta(days=1) - timedelta(hours=1)
         period_from = self.period_to - timedelta(minutes=120)
-        # print("period_from: ", self.period_from)
-        # print("period_to: ", self.period_to)
-        
-        # print("period_from timestamp (for self.timezone): ", self.period_from.astimezone(self.for_timezone).timestamp())
-        # print("period_to timestamp (for self.timezone): ", self.period_to.astimezone(self.for_timezone).timestamp())
         
         data = self.retrieve_data(period_from.astimezone(self.for_timezone), period_to.astimezone(self.for_timezone), agent_id)
-        data = data[-1]["payload"]
-        reconciliation_state = find_reconciliation(data["state"])
-        children = reconciliation_state["children"]
-        
-        # date and time
-        # time on the report used to be when the report was generated.
-        # now = datetime.now(ZoneInfo(reconciliation_state["timezone"]))
+
         report_gen_time_saudi = period_to.astimezone(ZoneInfo("Asia/Riyadh"))
-        # report_gen_time_saudi = self.period_to
         report_date = report_gen_time_saudi.strftime("%d-%m-%Y")
         report_time = report_gen_time_saudi.strftime("%I:%M:%p").lower()
         context["report_date"] = report_date
@@ -81,25 +108,62 @@ class InjectorReportGenerator(ReportGenerator):
         context["skid_name"] = self.get_agent_display_name(agent_id)
         
         # injectors
-        for injector in reconciliation_state["injectors"]:
-            injector_name = injector["name"]
-            injector_display_name = injector["displayName"]
-            injector_index = injector["index"]
+        found_last_injection_of_day = False
+        data_index = -1
+        
+        # data is retrieved for a two hour window before midnight for,
+        log.debug("Iterating back through data to find last injection of the day...") 
+        while not found_last_injection_of_day:
+            data_entry = data[data_index]["payload"]
+            reconciliation_state = find_reconciliation(data_entry["state"])
+            log.debug(f"Attempt: {abs(data_index)}, Timestamp: {unix_to_riyadh_datetime(data[data_index]['timestamp'])}")
             
-            flowmeter_total_name = f"{injector_name}_header_LDayTotal"
-            actual_injection_detergent_name = f"{injector_name}_LDayTotal"
-            calculated_detergent_name = f"{injector_name}CalcedLTotal"
-            difference_name = f"{injector_name}Difference"
+            if reconciliation_state is None:
+                data_index -= 1
+                found_last_injection_of_day = False
+                log.debug(f"No reconciliation state found, trying again...")
+                continue
             
-            sub_context = {
-                "index": injector_index,
-                "injector_name": injector_display_name,
-                "flowmeter_total": children.get(flowmeter_total_name, {}).get("currentValue", 0),#injector["flowmeter_total"],
-                "actual_injection_detergent": children.get(actual_injection_detergent_name, {}).get("currentValue", 0),#injector["actual_injection_detergent"],
-                "calculated_detergent": children.get(calculated_detergent_name, {}).get("currentValue", 0),#injector["calculated_detergent"],
-                "difference": children.get(difference_name, {}).get("currentValue", 0),#injector["difference"],
-            }
-            context["injectors"].append(sub_context)
+            children = reconciliation_state["children"]
+            
+            injectors = []
+            zero_flow_injectors = 0
+            num_injectors = len(reconciliation_state["injectors"])
+            for injector in reconciliation_state["injectors"]:
+                injector_name = injector["name"]
+                injector_display_name = injector["displayName"]
+                injector_index = injector["index"]
+                
+                flowmeter_total_name = f"{injector_name}_header_LDayTotal"
+                actual_injection_detergent_name = f"{injector_name}_LDayTotal"
+                calculated_detergent_name = f"{injector_name}CalcedLTotal"
+                difference_name = f"{injector_name}Difference"
+                
+                flowmeter_total = children.get(flowmeter_total_name, {}).get("currentValue", 0)
+                if flowmeter_total is None or flowmeter_total < 100:
+                    zero_flow_injectors += 1
+
+                sub_context = {
+                    "index": injector_index,
+                    "injector_name": injector_display_name,
+                    "flowmeter_total": flowmeter_total, # children.get(flowmeter_total_name, {}).get("currentValue", 0),#injector["flowmeter_total"],
+                    "actual_injection_detergent": children.get(actual_injection_detergent_name, {}).get("currentValue", 0),#injector["actual_injection_detergent"],
+                    "calculated_detergent": children.get(calculated_detergent_name, {}).get("currentValue", 0),#injector["calculated_detergent"],
+                    "difference": children.get(difference_name, {}).get("currentValue", 0),#injector["difference"],
+                }
+                found_last_injection_of_day = True
+                injectors.append(sub_context)
+            
+            if zero_flow_injectors == num_injectors:
+                data_index -= 1
+                found_last_injection_of_day = False
+                log.debug(f"All injectors have zero flow, trying again...")
+            else:
+                found_last_injection_of_day = True
+
+            
+        log.debug(f"Successfull attempt: {abs(data_index)}")
+        context["injectors"] = injectors
         
         # totals
         context["total_gasoline"] = children.get("GasTotal", {}).get("currentValue", 0)
