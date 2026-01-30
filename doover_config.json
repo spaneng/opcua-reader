@@ -9,7 +9,7 @@
         "long_description": "README.md",
         "depends_on": [],
         "owner_org": "48f2d2c4-4c82-4fc3-8de8-d924d81c4588",
-        "image_name": "ghcr.io/spaneng/opcua-reader:master",
+        "image_name": "ghcr.io/spaneng/opcua-reader:dv1",
         "container_registry_profile": "70cd4b2b-505f-4028-ae1d-153c62a6e87b",
         "build_args": "--platform linux/arm64",
         "config_schema": {
