@@ -1,170 +1,139 @@
 import logging
 import time
-import asyncio
-import types
 
-from typing import Any
 from asyncua import Client
 from pydoover.docker import Application
-from pydoover import ui
 from pydoover.utils.alarm import create_alarm
 
 from .app_config import OpcuaReaderConfig
-from .app_ui import OpcuaReaderUI
-from .app_state import OpcuaReaderState
+from .app_ui import OpcuaReaderUI, element_name, slider_name
 
 log = logging.getLogger()
 
+# The data plane deserialises severity as the serde variant name, not the int
+# value that pydoover.models.NotificationSeverity carries.
+NOTIFICATION_SEVERITY_WARN = "Warn"
+
+
 class OpcuaReaderApplication(Application):
-    config: OpcuaReaderConfig  # not necessary, but helps your IDE provide autocomplete!
+    config_cls = OpcuaReaderConfig
+    ui_cls = OpcuaReaderUI
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.started = time.time()
-        
     async def setup(self):
-        self.ui = OpcuaReaderUI(self.config)
-        self.loop_pause_period = 5
+        self.started = time.time()
+        self.loop_target_period = 5
 
         self.server_uri = self.config.opcua_uri.value
         self.vars = self.config.opcua_values.elements
-        
+
+        self.alarms = {}
         self.init_alarms()
 
-        self.ui_manager.add_children(*self.ui.fetch())
-        self.ui_manager.set_display_name("OPC UA Reader")
-
     async def main_loop(self):
-        # log.info(f"State is: {self.state.state}")
-        server_vals = await self.get_server_values()
-        if server_vals:
-            log.info("Server values fetched successfully.")
-            values = await self.get_server_values()
-            self.ui.update(values)
-            log.info("UI updated with new values.")
-        else:
+        values = await self.get_server_values()
+        if not values:
             log.error("Failed to fetch server values.")
-    
-    async def run_alarm(val):
-        return val
-            
-    #     self.get_test_increment = create_alarm(
-    #         self.get_test_increment,
-    #         lambda x:x>20,
-    #         callback=self.test_alarm_callback,
-    #         grace_period=15,
-    #         min_inter_alarm=60,
-    #     )
+            return
 
-    # async def get_test_increment(self):
-    #     return self.test_increment
-    
-    # def create_alarm(
-    #     func,
-    #     threshold_met,
-    #     callback=None,
-    #     grace_period=None,
-    #     min_inter_alarm=None,
-    # ):
+        for value in values:
+            await self.set_tag(
+                element_name(value["nsidx"], value["var_name"]), value["value"]
+            )
 
     def init_alarms(self):
+        # Alarm sliders live inside submodules, so look them up through the
+        # UI's recursive interaction registry rather than as attributes.
+        interactions = self.ui.get_interactions()
+
         for var in self.vars:
             nsidx = var.name_space_index.value
             var_name = var.variable_name.value
-            snsr_name = var.sensor_object_name.value
-
-            sensor_obj = f"{nsidx}:{snsr_name}"
-            _variable = f"{nsidx}:{var_name}"
 
             for alm in var.alarms.elements:
                 alm_name = alm.name.value
-                alm_grace_period = alm.grace_period.value
                 if not alm_name:
-                    log.warning(f"Alarm name is empty for variable {var_name}. Skipping alarm creation.")
-                    continue
-                
-                alm_level = getattr(self,f"_{nsidx}_{var_name}_{alm_name}_slider").current_value
-                
-                if alm.high_low.value == "High":
-                    alm_cond = lambda x:x>alm_level
-                    alert_txt = "above"
-                else:
-                    alm_cond = lambda x:x<alm_level    
-                    alert_txt = "below"
-                
-                alarm_id = f"{sensor_obj}_{_variable}_{alm_name}"
-                
-                async def alm_callback():
-                    await self.ui_manager.publish_to_channel(
-                        "significantEvent",
-                        f"Alert: {alm_name} is {alert_txt} {alm_level}",
+                    log.warning(
+                        f"Alarm name is empty for variable {var_name}. Skipping alarm creation."
                     )
-                    logging.info(f"ALARM: {alm_name} is {alert_txt} {alm_level}")
-                
-                setattr(self, f"{alarm_id}_cb", types.MethodType(alm_callback, self))
-                
-                _alarm = create_alarm(
-                    self.run_alarm,
-                    alm_cond,
-                    getattr(self, f"{alarm_id}_cb"),
-                    grace_period=alm_grace_period
+                    continue
+
+                slider = interactions[slider_name(nsidx, var_name, alm_name)]
+                high = alm.high_low.value == "High"
+
+                self.alarms[(nsidx, var_name, alm_name)] = create_alarm(
+                    self._passthrough,
+                    self._make_threshold(slider, high),
+                    self._make_alarm_callback(
+                        alm_name, "above" if high else "below", slider
+                    ),
+                    grace_period=alm.grace_period.value,
                 )
-                
-                setattr(self, alarm_id, types.MethodType(_alarm, self))
+
+    @staticmethod
+    async def _passthrough(value):
+        return value
+
+    @staticmethod
+    def _slider_level(slider):
+        # A slider the operator has never moved has no stored value, so reading
+        # it raises (AttributeError when no manager is attached, e.g. in tests).
+        # Fall back to its default (the midpoint of its range).
+        try:
+            return slider.value
+        except (KeyError, AttributeError):
+            return slider.default
+
+    def _make_threshold(self, slider, high: bool):
+        def threshold_met(value):
+            level = self._slider_level(slider)
+            if value is None or level is None or not isinstance(value, (int, float)):
+                return False
+            return value > level if high else value < level
+
+        return threshold_met
+
+    def _make_alarm_callback(self, alm_name: str, alert_txt: str, slider):
+        async def callback():
+            level = self._slider_level(slider)
+            message = f"Alert: {alm_name} is {alert_txt} {level}"
+            await self.create_message(
+                "notifications",
+                {"message": message, "severity": NOTIFICATION_SEVERITY_WARN},
+            )
+            log.info(f"ALARM: {message}")
+
+        return callback
 
     async def get_server_values(self):
-        res = []
         if self.server_uri is None:
             log.error("No OPC UA URI provided in the configuration.")
-            return
-        
+            return None
+
+        res = []
         async with Client(url=self.server_uri) as client:
             log.info("Connected to OPC UA Server at %s", self.server_uri)
 
             objects = client.nodes.objects
-            log.info("Objects node is: %r", objects)
 
-            for var in self.config.opcua_values.elements:
-    
+            for var in self.vars:
                 nsidx = var.name_space_index.value
                 var_name = var.variable_name.value
                 snsr_name = var.sensor_object_name.value
-                sensor_obj = f"{nsidx}:{snsr_name}"
-                _variable = f"{nsidx}:{var_name}"   
 
-                sensor_obj = await objects.get_child([f"{nsidx}:{snsr_name}"])
                 try:
-                    _variable = await sensor_obj.get_child([f"{nsidx}:{var_name}"])  
-                    value = await _variable.read_value()
-                    log.info("Value of MyVariable: %s", value)
+                    sensor_node = await objects.get_child([f"{nsidx}:{snsr_name}"])
+                    var_node = await sensor_node.get_child([f"{nsidx}:{var_name}"])
+                    value = await var_node.read_value()
+                    log.info("Value of %s: %s", var_name, value)
                 except Exception as e:
-                    log.error("Error reading variable: %s", e)
+                    log.error("Error reading variable %s: %s", var_name, e)
                     value = None
-                res.append({
-                    "nsidx": nsidx,
-                    "var_name": var_name,
-                    "value": value
-                })
-                
-                #check alarms
+
+                res.append({"nsidx": nsidx, "var_name": var_name, "value": value})
+
                 for alm in var.alarms.elements:
-                    alm_name = alm.name.value
-                    alarm_id = f"{sensor_obj}_{_variable}_{alm_name}"
-                    check_alarm = getattr(self, alarm_id)
-                    await check_alarm(value)
+                    check_alarm = self.alarms.get((nsidx, var_name, alm.name.value))
+                    if check_alarm is not None:
+                        await check_alarm(value)
 
         return res
-    
-
-    async def _on_deployment_config_update(self, channel_name, config: dict[str, Any]):
-        # this uses an internal method because we don't have a good way of "application discovery" at the moment.
-        # however, we want to set the UI variant based on the number of vega nodes. Usually this will be 1.
-        await super()._on_deployment_config_update(channel_name, config)
-        num_vegas = len([n for n in config["applications"] if "opcua_reader" in n])
-        if num_vegas > 1 or len(config["applications"]) > 5:
-            log.info("Multiple sensors/apps detected. Setting UI variant to `submodule`.")
-            self.ui_manager.set_variant("submodule")
-        else:
-            log.info("Single sensor detected. Setting UI variant to `stacked`.")
-            self.ui_manager.set_variant("stacked")
