@@ -131,7 +131,7 @@ class SimulatedOPCUAServer(Application):
             print(f"OPC UA Server running at {self.endpoint}")
             tasks = []
             tasks.append(asyncio.create_task(self._update_values()))
-            # tasks.append(asyncio.create_task(self.test_alarm()))
+            tasks.append(asyncio.create_task(self.test_alarm()))
             # tasks.append(asyncio.create_task(self.test_report()))
             
             await asyncio.gather(*tasks)
@@ -144,7 +144,7 @@ class SimulatedOPCUAServer(Application):
             await asyncio.sleep(30)
             print("Alarm triggered for node:", self.test_alarm_node)
             await self.test_alarm_node.write_value(True)
-            await asyncio.sleep(5)
+            await asyncio.sleep(0.05)
             await self.test_alarm_node.write_value(False)
             
     async def test_report(self):

@@ -327,7 +327,13 @@ class Overview:
         self.reconciliation = ui.RemoteComponent(
             name="Reconciliation",
             display_name="Reconciliation",
-            component_url="https://spaneng.github.io/fuel-additive-reconciliation/ReconciliationComponent.js",
+            # Hosted as a Doover channel file deployment (see doover_config.json
+            # file_deployments). component_url is the channel name, not a URL.
+            # scope/module must be pinned because the channel name does not match
+            # the widget's Module Federation container name.
+            component_url="fuel_additive_reconciliation",
+            scope="ReconciliationComponent",
+            module="./ReconciliationComponent",
             children=children,
             timezone=self.timezone,
             skid_name=self.skid_name,

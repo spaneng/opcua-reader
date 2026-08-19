@@ -161,10 +161,15 @@ class TableManager:
         self._tables[name].add_entry(entry)
         await self.push_update_to_channel()
         
-    async def push_update_to_channel(self):
+    async def push_update_to_channel(self, max_age: int = None):
         table_update = {}
         for name,table in self._tables.items():
             table_update[name] = table.to_dict()
-        await self.dda.publish_to_channel(self.channel_name, table_update)
+        await self.dda.publish_to_channel(self.channel_name, table_update, max_age=max_age)
+        
+    async def clear_table(self, name: str):
+    ## a function to clear all the entries in the table
+        self._tables[name].data = []
+        await self.push_update_to_channel(max_age=-1)
     
     

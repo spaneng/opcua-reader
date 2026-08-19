@@ -314,7 +314,13 @@ class Injector:
         # hmi_remote = ui.Submodule(
             f"injector_{self.index}_hmi",
             f"Injector {self.index} HMI",
-            component_url="https://spaneng.github.io/fuel-additive-hmi/HMIComponent.js",
+            # Hosted as a Doover channel file deployment (see doover_config.json
+            # file_deployments). component_url is the channel name, not a URL.
+            # scope/module must be pinned because the channel name does not match
+            # the widget's Module Federation container name.
+            component_url="fuel_additive_hmi",
+            scope="HMIComponent",
+            module="./HMIComponent",
             injector_index=self.index,
             children=[
                 ui.NumericVariable(f"injector{self.index}LInject", f"Injector {self.index} L Inject"),

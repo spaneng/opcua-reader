@@ -91,6 +91,20 @@
         },
         "repo_branch": "main",
         "staging_config": {},
-        "key": "d198f35f-c747-46c5-857b-b05243fa9364"
+        "key": "d198f35f-c747-46c5-857b-b05243fa9364",
+        "file_deployments": {
+            "files": [
+                {
+                    "name": "fuel_additive_hmi",
+                    "file_dir": "assets/HMIComponent.js",
+                    "mime_type": "text/javascript"
+                },
+                {
+                    "name": "fuel_additive_reconciliation",
+                    "file_dir": "assets/ReconciliationComponent.js",
+                    "mime_type": "text/javascript"
+                }
+            ]
+        }
     }
 }

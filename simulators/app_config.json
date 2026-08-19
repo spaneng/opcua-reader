@@ -8,10 +8,6 @@
         {
             "injector_name": "Inj 2EQ",
             "injector_index": 2
-        },
-        {
-            "injector_name": "Inj 3PL",
-            "injector_index": 3
         }
     ],
     "timezone": "Asia/Riyadh",

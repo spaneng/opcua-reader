@@ -31,7 +31,7 @@ class OpcuaReaderApplication(Application):
         self.ui_elems = [ui.AlertStream("opcua_reader_alerts", "OPC UA Reader Alerts")]
         
         # Initialize Doover Table Manager
-        self.doover_table_manager.setup()
+        await self.doover_table_manager.setup()
 
         # Initializa OPCUA Client
         self.server_uri = self.config.opcua_uri.value
