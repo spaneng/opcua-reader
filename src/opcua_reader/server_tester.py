@@ -1,6 +1,8 @@
 import asyncio
-from asyncua import Server
 import random
+
+from asyncua import Server
+
 
 async def main():
     server = Server()

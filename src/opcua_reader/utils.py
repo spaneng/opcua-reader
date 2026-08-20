@@ -1,5 +1,6 @@
 import re
 
+
 def to_camel_case(s: str) -> str:
     # Split on spaces, underscores, or dashes
     parts = re.split(r'[\s_-]+', s.strip())

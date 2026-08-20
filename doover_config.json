@@ -14,14 +14,12 @@
         "description": "Read OPCUA values and create alarms based on those values",
         "long_description": "README.md",
         "depends_on": [],
-        "owner_org": "48f2d2c4-4c82-4fc3-8de8-d924d81c4588",
         "image_name": "ghcr.io/spaneng/opcua-reader:fuel_additive",
-        "container_registry_profile": "70cd4b2b-505f-4028-ae1d-153c62a6e87b",
         "build_args": "--platform linux/arm64",
         "config_schema": {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": "",
-            "title": "Application Config",
+            "title": "$default",
             "type": "object",
             "properties": {
                 "opcua_address": {
@@ -29,58 +27,78 @@
                     "x-name": "opcua_address",
                     "x-hidden": false,
                     "type": "string",
-                    "description": "OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/"
+                    "x-required": true,
+                    "description": "OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/",
+                    "x-position": 0
                 },
                 "injectors": {
                     "title": "Injectors",
                     "x-name": "injectors",
                     "x-hidden": false,
                     "type": "array",
+                    "x-required": true,
                     "description": "List of injectors, names MUST be unique",
+                    "x-position": 1,
                     "items": {
                         "title": "Injector",
                         "x-name": "injector",
                         "x-hidden": false,
                         "type": "object",
-                        "description": "Injector configuration",
+                        "x-required": true,
                         "properties": {
                             "injector_name": {
                                 "title": "Injector Name",
                                 "x-name": "injector_name",
                                 "x-hidden": false,
                                 "type": "string",
-                                "description": "Name of the injector"
+                                "x-required": true,
+                                "description": "Name of the injector",
+                                "x-position": 1
                             },
                             "injector_index": {
                                 "title": "Injector Index",
                                 "x-name": "injector_index",
                                 "x-hidden": false,
                                 "type": "integer",
-                                "description": "Index of the injector, used for the OPC UA node names"
+                                "x-required": true,
+                                "description": "Index of the injector, used for the OPC UA node names",
+                                "x-position": 2
                             }
                         },
                         "additionalElements": true,
                         "required": [
                             "injector_name",
                             "injector_index"
-                        ]
+                        ],
+                        "x-collapsible": true,
+                        "x-defaultCollapsed": false
                     }
                 },
                 "timezone": {
                     "title": "Timezone",
                     "x-name": "timezone",
                     "x-hidden": false,
-                    "type": "string",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "Timezone of the report, e.g. America/New_York",
-                    "default": "Asia/Riyadh"
+                    "default": "Asia/Riyadh",
+                    "x-position": 2
                 },
                 "report_restart_time": {
                     "title": "Report Restart Time",
                     "x-name": "report_restart_time",
                     "x-hidden": false,
-                    "type": "integer",
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
                     "description": "Time in Hrs to restart the report, 6=6am, 12=noon, 17=5pm etc.",
-                    "default": 10
+                    "default": 10,
+                    "x-position": 3
                 }
             },
             "additionalElements": true,
@@ -89,7 +107,7 @@
                 "injectors"
             ]
         },
-        "repo_branch": "main",
+        "repo_branch": "fuel_additive",
         "staging_config": {},
         "key": "d198f35f-c747-46c5-857b-b05243fa9364",
         "file_deployments": {
@@ -105,6 +123,9 @@
                     "mime_type": "text/javascript"
                 }
             ]
-        }
+        },
+        "owner_org_id": "93957122026437134",
+        "container_registry_profile_id": "93955731140704771",
+        "export_ui_command": "NO_EXPORT"
     }
 }

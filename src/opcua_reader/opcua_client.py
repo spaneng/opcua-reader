@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from typing import Callable
+
 from asyncua import Client, ua
 from asyncua.common.subscription import Subscription
 

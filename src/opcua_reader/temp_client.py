@@ -1,5 +1,7 @@
 import asyncio
+
 from asyncua import Client, ua
+
 
 async def main():
     url = "opc.tcp://192.168.1.190:8030"

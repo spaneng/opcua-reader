@@ -1,94 +1,130 @@
 import logging
 import time
-import asyncio
-import types
-
 from typing import Any
-from asyncua import Client
-from pydoover.docker import Application, DeviceAgentInterface
-from pydoover import ui
+
+from pydoover.docker import Application
 
 from .app_config import OpcuaReaderConfig
+from .app_ui import OpcuaReaderUI
+from .injector import Injector
 from .opcua_client import AsyncUAClient
 from .overview import Overview
-from .injector import Injector
-from .doover_table import DooverTableManager
 
 log = logging.getLogger()
 
+# How long a pending ui_state aggregate patch may coalesce before the DDA
+# pushes it to the cloud.
+UI_STATE_MAX_AGE_SECS = 5
+# The reconciliation report reads ui_state *message history*, so periodically
+# log a snapshot of the patched values as a channel message.
+UI_STATE_LOG_PERIOD_SECS = 300
+
+
 class OpcuaReaderApplication(Application):
-    config: OpcuaReaderConfig  # not necessary, but helps your IDE provide autocomplete!
+    config_cls = OpcuaReaderConfig
+    ui_cls = OpcuaReaderUI
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.started = time.time()
-        self.injectors = []
-        self.doover_table_manager = DooverTableManager(self.device_agent)
-        
     async def setup(self):
-        self.loop_pause_period = 5
-        self.ui_elems = [ui.AlertStream("opcua_reader_alerts", "OPC UA Reader Alerts")]
-        
-        # Initialize Doover Table Manager
-        await self.doover_table_manager.setup()
+        self.started = time.time()
+        self.loop_target_period = 5
 
-        # Initializa OPCUA Client
+        # name -> (path below app node, values) queued for the next ui_state patch
+        self._pending_ui_values: dict[tuple[str, ...], dict[str, Any]] = {}
+        self._pending_ui_props: dict[tuple[str, ...], dict[str, Any]] = {}
+        self._last_ui_state_log = 0.0
+
+        # Initialise OPCUA Client
         self.server_uri = self.config.opcua_uri.value
         self.opcua_client = AsyncUAClient(self.server_uri)
         await self.opcua_client.setup()
         log.info("OPC UA Client setup complete.")
-        
-        # Initialize Injectors
-        self._injector_configs = self.config.injectors.elements
-        for inj_conf in self._injector_configs:
+
+        # Initialise Injectors
+        self.injectors = []
+        for inj_conf in self.config.injectors.elements:
             injector = Injector(
-                inj_conf.injector_index.value,
+                int(inj_conf.injector_index.value),
                 inj_conf.injector_name.value,
-                self.opcua_client, 
-                self.device_agent,
-                self.ui_manager,
-                self.config.timezone.value
+                self.opcua_client,
+                self,
+                self.config.timezone.value,
             )
             await injector.setup()
             self.injectors.append(injector)
-            self.ui_elems.append(await injector.fetch_ui())
-            
-            log.info(f"Injector {inj_conf.injector_name.value}; {inj_conf.injector_index.value} initialized.")
-        
-        # Initialize Overview
+
+            log.info(
+                f"Injector {inj_conf.injector_name.value}; "
+                f"{inj_conf.injector_index.value} initialized."
+            )
+
+        # Initialise Overview
         self.overview = Overview(
-            self.opcua_client, 
-            self.device_agent, 
-            self.ui_manager,
+            self.opcua_client,
+            self,
             injectors=self.injectors,
             timezone=self.config.timezone.value,
-            skid_name=self.app_display_name
         )
-        
         await self.overview.setup()
-        self.ui_elems.extend(self.overview.fetch_ui())
-        
-        self.ui_manager.add_children(*self.ui_elems)
-        self.ui_manager.set_variant("stacked")
-        self.ui_manager.set_display_name("Fuel Additive")
-        await asyncio.sleep(3)
 
     async def main_loop(self):
-        # print("running main loop")
         await self.overview.main_loop()
         for injector in self.injectors:
             await injector.main_loop()
-    
 
-    async def _on_deployment_config_update(self, channel_name, config: dict[str, Any]):
-        # this uses an internal method because we don't have a good way of "application discovery" at the moment.
-        # however, we want to set the UI variant based on the number of vega nodes. Usually this will be 1.
-        await super()._on_deployment_config_update(channel_name, config)
-        num_vegas = len([n for n in config["applications"] if "opcua_reader" in n])
-        if num_vegas > 1 or len(config["applications"]) > 5:
-            log.info("Multiple sensors/apps detected. Setting UI variant to `submodule`.")
-            self.ui_manager.set_variant("submodule")
-        else:
-            log.info("Single sensor detected. Setting UI variant to `stacked`.")
-            self.ui_manager.set_variant("stacked")
+        await self.flush_ui_values()
+
+    # --- legacy remote-component value plumbing -----------------------------
+    #
+    # The HMI and Reconciliation widgets read literal `currentValue`s from
+    # their children in ui_state (v1 behaviour), so those values cannot be
+    # tag-bound. Instead, injectors and the overview queue values here and the
+    # main loop flushes them as one deep-merge patch on the ui_state channel.
+
+    def queue_ui_values(
+        self,
+        path: list[str],
+        values: dict[str, Any],
+        node_props: dict[str, Any] | None = None,
+    ):
+        """Queue literal currentValue updates for elements below the app node.
+
+        ``path`` is the chain of element names below this app's node in
+        ui_state, ``values`` maps child element name -> value, and
+        ``node_props`` are extra properties merged onto the element at
+        ``path`` itself.
+        """
+        key = tuple(path)
+        self._pending_ui_values.setdefault(key, {}).update(values)
+        if node_props:
+            self._pending_ui_props.setdefault(key, {}).update(node_props)
+
+    def _build_ui_state_patch(self) -> dict[str, Any]:
+        app_children: dict[str, Any] = {}
+        for key in set(self._pending_ui_values) | set(self._pending_ui_props):
+            children = app_children
+            node: dict[str, Any] = {}
+            for name in key:
+                node = children.setdefault(name, {})
+                children = node.setdefault("children", {})
+            node.update(self._pending_ui_props.get(key, {}))
+            for name, value in self._pending_ui_values.get(key, {}).items():
+                children.setdefault(name, {})["currentValue"] = value
+
+        return {"state": {"children": {self.app_key: {"children": app_children}}}}
+
+    async def flush_ui_values(self):
+        if not (self._pending_ui_values or self._pending_ui_props):
+            return
+
+        patch = self._build_ui_state_patch()
+        self._pending_ui_values = {}
+        self._pending_ui_props = {}
+
+        await self.update_channel_aggregate(
+            "ui_state", patch, max_age_secs=UI_STATE_MAX_AGE_SECS
+        )
+
+        now = time.time()
+        if now - self._last_ui_state_log >= UI_STATE_LOG_PERIOD_SECS:
+            self._last_ui_state_log = now
+            await self.create_message("ui_state", patch)

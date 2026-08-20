@@ -1,5 +1,7 @@
 import asyncio
+
 from asyncua import Client, ua
+
 
 async def print_tree(node, indent="", last=True, visited=None):
     """

@@ -1,7 +1,8 @@
 import enum
-
 from pathlib import Path
+
 from pydoover import config
+
 
 class Timezone(enum.Enum):
     SYDNEY = "Australia/Sydney"
@@ -19,47 +20,41 @@ class Timezone(enum.Enum):
     QATAR = "Asia/Qatar"
     KSA = "Asia/Riyadh"
 
-class OpcuaReaderConfig(config.Schema):
-    def __init__(self):
 
-        self.opcua_uri = config.String(
-            "OPCUA Address",
-            description="OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/",
-        )
-        
-        injector = config.Object(
-            "Injector",
-            description="Injector configuration",
-        )
-        
-        injector.add_elements(
-            config.String(
-                "Injector Name",
-                description="Name of the injector",
-            ),
-            config.Integer(
-                "Injector Index",
-                description="Index of the injector, used for the OPC UA node names",
-            )
-        )
-        
-        self.injectors = config.Array(
-            "Injectors",
-            description="List of injectors, names MUST be unique",
-            element=injector
-        )
-        
-        self.timezone = config.String(
-            "Timezone",
-            description="Timezone of the report, e.g. America/New_York",
-            default=Timezone.RIYADH.value
-        )
-        
-        self.report_restart_time = config.Integer(
-            "Report Restart Time",
-            description="Time in Hrs to restart the report, 6=6am, 12=noon, 17=5pm etc.",
-            default=10
-        )
+class InjectorConfig(config.Object):
+    injector_name = config.String(
+        "Injector Name",
+        description="Name of the injector",
+    )
+    injector_index = config.Integer(
+        "Injector Index",
+        description="Index of the injector, used for the OPC UA node names",
+    )
+
+
+class OpcuaReaderConfig(config.Schema):
+    opcua_uri = config.String(
+        "OPCUA Address",
+        description="OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/",
+    )
+    injectors = config.Array(
+        "Injectors",
+        description="List of injectors, names MUST be unique",
+        element=InjectorConfig("Injector"),
+    )
+    timezone = config.String(
+        "Timezone",
+        description="Timezone of the report, e.g. America/New_York",
+        default=Timezone.RIYADH.value,
+    )
+    report_restart_time = config.Integer(
+        "Report Restart Time",
+        description="Time in Hrs to restart the report, 6=6am, 12=noon, 17=5pm etc.",
+        default=10,
+    )
+
 
 def export():
-    OpcuaReaderConfig().export(Path(__file__).parent.parent.parent / "doover_config.json", "fuel_additive_opcua_reader")
+    OpcuaReaderConfig.export(
+        Path(__file__).parents[2] / "doover_config.json", "fuel_additive_opcua_reader"
+    )

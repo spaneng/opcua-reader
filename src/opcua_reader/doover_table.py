@@ -1,8 +1,9 @@
 import logging
-
-from pydoover.docker import DeviceAgentInterface
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
+from pydoover.docker import DeviceAgentInterface
+
 
 def day_name_days_ago(tz: str, days_ago: int) -> str:
     # Get current datetime in given timezone
@@ -32,6 +33,7 @@ class DooverDataTableObject:
         self.header_display_names = header_display_names
         self.header_order = header_order
         self.max_pages = max_pages
+        self.timezone = timezone
         self.data = data
         
         if len(self.data) == 0:
@@ -98,8 +100,9 @@ class DooverTableManager:
         await self.pull_channel_data()
         
     async def pull_channel_data(self):
-        channel_agg = await self.dda.get_channel_aggregate(self.channel_name)
-        
+        aggregate = await self.dda.fetch_channel_aggregate(self.channel_name)
+        channel_agg = aggregate.data if aggregate is not None else None
+
         if channel_agg is None or channel_agg == {}:
             return
         
@@ -163,8 +166,8 @@ class DooverTableManager:
         
     async def push_update_to_channel(self):
         table_update = {}
-        for name,table in self._tables.items():
+        for name, table in self._tables.items():
             table_update[name] = table.to_dict()
-        await self.dda.publish_to_channel(self.channel_name, table_update)
+        await self.dda.update_channel_aggregate(self.channel_name, table_update)
     
     
