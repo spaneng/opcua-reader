@@ -393,14 +393,16 @@ class Overview:
 
         # The report generator reads these from ui_state message history, and
         # needs the `injectors` prop on the Reconciliation node to interpret
-        # the children — include it so every logged snapshot is self-contained.
+        # the children (and `skid_name` to title/name the PDF) — include them
+        # so every logged snapshot is self-contained.
         self.app.queue_ui_values(
             RECONCILIATION_PATH,
             values,
             node_props={
                 "injectors": reconciliation_injectors_meta(
                     [(inj.index, inj.display_name) for inj in self.injectors]
-                )
+                ),
+                "skid_name": self.app.app_display_name,
             },
         )
 

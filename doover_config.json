@@ -1,10 +1,4 @@
 {
-    "reports": [
-        {
-            "name": "Reconciliation Report",
-            "package_dir": "report_generator"
-        }
-    ],
     "fuel_additive_opcua_reader": {
         "name": "fuel_additive_opcua_reader",
         "display_name": "Fuel Additive OPCUA Reader",

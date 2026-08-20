@@ -1,12 +1,22 @@
 [project]
-name = "report-generator"
+name = "fuel-additive-report"
 version = "0.1.0"
-description = "Report generator for OPCUA reader"
-readme = "README.md"
-requires-python = "==3.11"
+description = "Daily reconciliation PDF report for fuel additive skids"
+requires-python = ">=3.11"
 dependencies = [
-    "pydoover @ git+https://github.com/getdoover/pydoover.git@remote-inherit-from-container",
-    "jinja2>=3.0.0",
-    "weasyprint>=60.0.0",
+    "fpdf2>=2.8.0",
+    "pydoover[reports]>=1.9.0",
 ]
 
+[project.scripts]
+export-config = "fuel_additive_report.app_config:export"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fuel_additive_report"]
+
+[dependency-groups]
+dev = ["pytest>=8.3.5"]
