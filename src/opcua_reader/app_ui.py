@@ -27,5 +27,9 @@ class OpcuaReaderUI(ui.UI, display_name="Fuel Additive"):
         for index, display_name in injector_specs:
             self.add_element(build_injector_ui(index, display_name))
 
-        for elem in build_overview_ui(injector_specs, self.config.timezone.value):
+        for elem in build_overview_ui(
+            injector_specs,
+            self.config.timezone.value,
+            self.config.skid_name.value,
+        ):
             self.add_element(elem)

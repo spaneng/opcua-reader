@@ -37,6 +37,14 @@ class OpcuaReaderConfig(config.Schema):
         "OPCUA Address",
         description="OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/",
     )
+    skid_name = config.String(
+        "Skid Name",
+        description=(
+            "Short site/skid code used to title the reconciliation report and "
+            "name its PDF, e.g. SJBP. Leave blank to use the app display name."
+        ),
+        default="",
+    )
     injectors = config.Array(
         "Injectors",
         description="List of injectors, names MUST be unique",

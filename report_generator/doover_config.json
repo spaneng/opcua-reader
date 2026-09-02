@@ -8,7 +8,7 @@
         "description": "Daily reconciliation PDF report for fuel additive skids",
         "long_description": "README.md",
         "export_ui_command": "NO_EXPORT",
-        "owner_org_id": 93957122026437134,
+        "owner_org_id": 142400552532231428,
         "lambda_config": {
             "Environment": {},
             "Runtime": "python3.13",

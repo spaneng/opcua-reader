@@ -14,11 +14,13 @@ NOTIFICATION_SEVERITY_WARN = "Warn"
 
 
 def build_overview_ui(
-    injector_specs: list[tuple[int, str]], timezone: str
+    injector_specs: list[tuple[int, str]], timezone: str, skid_name: str = ""
 ) -> list[ui.Element]:
     """Build the overview UI elements.
 
     ``injector_specs`` is a list of (index, display_name) tuples from config.
+    ``skid_name`` is the short site code (e.g. SJBP) shown on the widget and
+    the report; blank falls back to the app display name.
 
     The plain analog variables are tag-bound (the application sets a tag per
     value). The Reconciliation widget reads literal ``currentValue``s from its
@@ -91,9 +93,10 @@ def build_overview_ui(
         module="./ReconciliationComponent",
         children=children,
         timezone=timezone,
-        # Resolved from the deployment config when the runtime schema is
-        # published, so the widget shows the install's display name.
-        skid_name="$config.app().APP_DISPLAY_NAME",
+        # The configured skid code if set; otherwise the token, resolved from
+        # the deployment config when the runtime schema is published so the
+        # widget falls back to the install's display name.
+        skid_name=skid_name or "$config.app().APP_DISPLAY_NAME",
         position=7,
         injectors=reconciliation_injectors_meta(injector_specs),
         name="Reconciliation",
@@ -402,7 +405,9 @@ class Overview:
                 "injectors": reconciliation_injectors_meta(
                     [(inj.index, inj.display_name) for inj in self.injectors]
                 ),
-                "skid_name": self.app.app_display_name,
+                "skid_name": (
+                    self.app.config.skid_name.value or self.app.app_display_name
+                ),
             },
         )
 

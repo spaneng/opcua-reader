@@ -62,27 +62,36 @@ class FuelAdditiveReportGenerator(Application):
         This function gets context for the report.
 
         For context (lol):
-            The data for the report is cleared at midnight by the PLC.
-            Therefore we iterate back through the data to find the last
-            injection of the day.
+            The PLC clears the daily data at midnight local time, so the day's
+            final totals live in the last snapshot before that reset. We take
+            the whole local day as the window and walk back from its end --
+            anchoring on the reset rather than on the run time, because these
+            skids resume injecting within minutes of midnight and a lookback
+            measured from the run would land on the *new* day's data.
         """
-        period_to = period_end + timedelta(days=1) - timedelta(hours=1)
-        period_from = period_end - timedelta(minutes=120)
+        day_end = period_end.astimezone(ZoneInfo(REPORT_TIMEZONE)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        day_start = day_end - timedelta(days=1)
 
         messages = await self.api.iter_messages(
             "ui_state",
-            before=period_to,
-            after=period_from,
+            before=day_end,
+            after=day_start,
             agent_id=agent_id,
         ).collect()
         messages.sort(key=lambda m: m.id)
-        log.info(f"Retrieved {len(messages)} ui_state messages for agent {agent_id}.")
+        log.info(
+            f"Retrieved {len(messages)} ui_state messages for agent {agent_id} "
+            f"between {day_start} and {day_end}."
+        )
 
-        report_gen_time_saudi = period_end.astimezone(ZoneInfo(REPORT_TIMEZONE))
         context = {
             "injectors": [],
-            "report_date": report_gen_time_saudi.strftime("%d-%m-%Y"),
-            "report_time": report_gen_time_saudi.strftime("%I:%M:%p").lower(),
+            "report_date": day_start.strftime("%d-%m-%Y"),
+            # Overwritten below with the timestamp of the snapshot actually
+            # used -- the report is "as at" the day's final reading.
+            "report_time": day_end.strftime("%I:%M%p").lower(),
         }
 
         # Iterate back through the data to find the last injection of the day.
@@ -137,6 +146,12 @@ class FuelAdditiveReportGenerator(Application):
             context["injectors"] = injectors
             context["skid_name"] = (
                 reconciliation_state.get("skid_name") or f"skid-{agent_id}"
+            )
+            # "as at" the reading this report was built from, not the run time.
+            context["report_time"] = (
+                message.timestamp.astimezone(ZoneInfo(REPORT_TIMEZONE))
+                .strftime("%I:%M%p")
+                .lower()
             )
 
             # totals

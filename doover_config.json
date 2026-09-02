@@ -25,6 +25,19 @@
                     "description": "OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/",
                     "x-position": 0
                 },
+                "skid_name": {
+                    "title": "Skid Name",
+                    "x-name": "skid_name",
+                    "x-hidden": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Short site/skid code used to title the reconciliation report and name its PDF, e.g. SJBP. Leave blank to use the app display name.",
+                    "default": "",
+                    "x-position": 1
+                },
                 "injectors": {
                     "title": "Injectors",
                     "x-name": "injectors",
@@ -32,7 +45,7 @@
                     "type": "array",
                     "x-required": true,
                     "description": "List of injectors, names MUST be unique",
-                    "x-position": 1,
+                    "x-position": 2,
                     "items": {
                         "title": "Injector",
                         "x-name": "injector",
@@ -79,7 +92,7 @@
                     "x-required": false,
                     "description": "Timezone of the report, e.g. America/New_York",
                     "default": "Asia/Riyadh",
-                    "x-position": 2
+                    "x-position": 3
                 },
                 "report_restart_time": {
                     "title": "Report Restart Time",
@@ -92,7 +105,7 @@
                     "x-required": false,
                     "description": "Time in Hrs to restart the report, 6=6am, 12=noon, 17=5pm etc.",
                     "default": 10,
-                    "x-position": 3
+                    "x-position": 4
                 }
             },
             "additionalElements": true,
