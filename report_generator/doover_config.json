@@ -789,7 +789,7 @@
         "repo_branch": "main",
         "build_args": null,
         "image_name": null,
-        "ui_schema": null,
+        "ui_schema": {},
         "icon_url": null,
         "banner_url": null,
         "staging_config": {},
