@@ -5,7 +5,7 @@ description = "Daily reconciliation PDF report for fuel additive skids"
 requires-python = ">=3.11"
 dependencies = [
     "fpdf2>=2.8.0",
-    "pydoover[reports]>=1.9.0",
+    "pydoover[reports]>=1.17.0",
 ]
 
 [project.scripts]

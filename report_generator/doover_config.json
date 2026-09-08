@@ -758,13 +758,9 @@
                     "title": "Email Destinations",
                     "x-name": "dv_emails",
                     "x-hidden": false,
-                    "type": [
-                        "array",
-                        "null"
-                    ],
-                    "x-required": false,
-                    "description": "Email addresses to send this report to once it is generated.",
-                    "default": [],
+                    "type": "array",
+                    "x-required": true,
+                    "description": "Email addresses to send this report to",
                     "x-position": 3,
                     "items": {
                         "title": "Email Address",
@@ -777,7 +773,8 @@
             },
             "additionalElements": true,
             "required": [
-                "dv_proc_extended_permissions"
+                "dv_proc_extended_permissions",
+                "dv_emails"
             ]
         },
         "depends_on": [],
