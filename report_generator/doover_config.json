@@ -753,6 +753,26 @@
                     "description": "The timezone to use for the report.",
                     "default": "Asia/Riyadh",
                     "x-position": 2
+                },
+                "dv_emails": {
+                    "title": "Email Destinations",
+                    "x-name": "dv_emails",
+                    "x-hidden": false,
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Email addresses to send this report to once it is generated.",
+                    "default": [],
+                    "x-position": 3,
+                    "items": {
+                        "title": "Email Address",
+                        "x-name": "dv_email",
+                        "x-hidden": false,
+                        "type": "string",
+                        "x-required": true
+                    }
                 }
             },
             "additionalElements": true,
