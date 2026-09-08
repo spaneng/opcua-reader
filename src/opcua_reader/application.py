@@ -63,6 +63,7 @@ class OpcuaReaderApplication(Application):
             self,
             injectors=self.injectors,
             timezone=self.config.timezone.value,
+            tank_count=int(self.config.tank_count.value),
         )
         await self.overview.setup()
 

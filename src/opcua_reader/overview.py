@@ -13,14 +13,27 @@ RECONCILIATION_PATH = ["Reconciliation"]
 NOTIFICATION_SEVERITY_WARN = "Warn"
 
 
+DEFAULT_TANK_COUNT = 2
+
+
+def tank_names(tank_count: int) -> list[str]:
+    """Polling-node / tag names of the tank level readings, ``LevelTank1..N``."""
+    return [f"LevelTank{n}" for n in range(1, tank_count + 1)]
+
+
 def build_overview_ui(
-    injector_specs: list[tuple[int, str]], timezone: str, skid_name: str = ""
+    injector_specs: list[tuple[int, str]],
+    timezone: str,
+    skid_name: str = "",
+    tank_count: int = DEFAULT_TANK_COUNT,
 ) -> list[ui.Element]:
     """Build the overview UI elements.
 
     ``injector_specs`` is a list of (index, display_name) tuples from config.
     ``skid_name`` is the short site code (e.g. SJBP) shown on the widget and
     the report; blank falls back to the app display name.
+    ``tank_count`` is the number of storage tanks; one ``Level Tank N (%)``
+    reading is shown per tank, ahead of the other analog values.
 
     The plain analog variables are tag-bound (the application sets a tag per
     value). The Reconciliation widget reads literal ``currentValue``s from its
@@ -29,48 +42,46 @@ def build_overview_ui(
     """
     elements = [
         ui.NumericVariable(
-            "Level Tank 1 (%)",
-            value=ui.tag_ref("LevelTank1", "number"),
+            f"Level Tank {n} (%)",
+            value=ui.tag_ref(name, "number"),
             precision=1,
-            position=1,
-            name="LevelTank1",
-        ),
-        ui.NumericVariable(
-            "Level Tank 2 (%)",
-            value=ui.tag_ref("LevelTank2", "number"),
-            precision=1,
-            position=2,
-            name="LevelTank2",
-        ),
-        ui.NumericVariable(
-            "Pressure (bar)",
-            value=ui.tag_ref("Pressure", "number"),
-            precision=2,
-            position=3,
-            name="Pressure",
-        ),
-        ui.NumericVariable(
-            "Shelter Temperature (°C)",
-            value=ui.tag_ref("ShelterTemperature", "number"),
-            precision=1,
-            position=4,
-            name="ShelterTemperature",
-        ),
-        ui.NumericVariable(
-            "Temperature Pump 1 (°C)",
-            value=ui.tag_ref("TemperaturePump1", "number"),
-            precision=1,
-            position=5,
-            name="TemperaturePump1",
-        ),
-        ui.NumericVariable(
-            "Temperature Pump 2 (°C)",
-            value=ui.tag_ref("TemperaturePump2", "number"),
-            precision=1,
-            position=6,
-            name="TemperaturePump2",
-        ),
+            position=n,
+            name=name,
+        )
+        for n, name in enumerate(tank_names(tank_count), start=1)
     ]
+    elements.extend(
+        [
+            ui.NumericVariable(
+                "Pressure (bar)",
+                value=ui.tag_ref("Pressure", "number"),
+                precision=2,
+                position=tank_count + 1,
+                name="Pressure",
+            ),
+            ui.NumericVariable(
+                "Shelter Temperature (°C)",
+                value=ui.tag_ref("ShelterTemperature", "number"),
+                precision=1,
+                position=tank_count + 2,
+                name="ShelterTemperature",
+            ),
+            ui.NumericVariable(
+                "Temperature Pump 1 (°C)",
+                value=ui.tag_ref("TemperaturePump1", "number"),
+                precision=1,
+                position=tank_count + 3,
+                name="TemperaturePump1",
+            ),
+            ui.NumericVariable(
+                "Temperature Pump 2 (°C)",
+                value=ui.tag_ref("TemperaturePump2", "number"),
+                precision=1,
+                position=tank_count + 4,
+                name="TemperaturePump2",
+            ),
+        ]
+    )
 
     children = _build_reconciliation_children(injector_specs)
     children.extend(
@@ -97,7 +108,7 @@ def build_overview_ui(
         # the deployment config when the runtime schema is published so the
         # widget falls back to the install's display name.
         skid_name=skid_name or "$config.app().APP_DISPLAY_NAME",
-        position=7,
+        position=tank_count + 5,
         injectors=reconciliation_injectors_meta(injector_specs),
         name="Reconciliation",
     )
@@ -172,10 +183,48 @@ class AlarmObj:  # can be either a warning or an alarm
 
 
 class PollingNode:
-    def __init__(self, name_base: str):
+    """An analog value polled from the PLC and published as a tag.
+
+    ``candidate_node_ids`` are tried in order at setup and the first one the
+    server can read becomes ``node_id``. Values normally live in the exported
+    ``DB_OPCUA_AnalogValues`` block; tank levels the integrator has not (yet)
+    added to that block fall back to the tank's instance DB, e.g. SJBP's
+    third tank is only reachable as ``"iDB_LevelTank3"."HMI"."Value"``.
+    """
+
+    def __init__(self, name_base: str, candidate_node_ids: list[str] | None = None):
         self.name_base = name_base
         self.name = f"{name_base}"
-        self.node_id = f'ns=3;s="DB_OPCUA_AnalogValues"."{self.name_base}"'
+        self.candidate_node_ids = candidate_node_ids or [
+            f'ns=3;s="DB_OPCUA_AnalogValues"."{self.name_base}"'
+        ]
+        self.node_id = self.candidate_node_ids[0]
+
+    @classmethod
+    def tank_level(cls, name_base: str):
+        tank_number = name_base.removeprefix("LevelTank")
+        return cls(
+            name_base,
+            [
+                f'ns=3;s="DB_OPCUA_AnalogValues"."{name_base}"',
+                f'ns=3;s="iDB_LevelTank{tank_number}"."HMI"."Value"',
+            ],
+        )
+
+    async def resolve(self, client: AsyncUAClient):
+        """Pick the first candidate node the server can actually read."""
+        for node_id in self.candidate_node_ids:
+            try:
+                await client.get_node_id_val(node_id)
+            except Exception as e:
+                log.info(f"{self.name}: {node_id} not readable ({e}), trying next")
+                continue
+            self.node_id = node_id
+            return
+        log.warning(
+            f"{self.name}: none of {self.candidate_node_ids} readable; "
+            f"keeping {self.node_id}"
+        )
 
 
 class Overview:
@@ -192,9 +241,7 @@ class Overview:
         11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 29, 30,
     ]  # fmt: skip
 
-    _polling_node_name_bases = [
-        "LevelTank1",
-        "LevelTank2",
+    _analog_node_name_bases = [
         "Pressure",
         "ShelterTemperature",
         "TemperaturePump1",
@@ -207,6 +254,7 @@ class Overview:
         app,
         injectors: list,
         timezone: str = "Asia/Riyadh",
+        tank_count: int = DEFAULT_TANK_COUNT,
     ):
         self.client = opcua_client
         self.app = app
@@ -214,14 +262,14 @@ class Overview:
         self.polling_nodes = []
         self.alarm_objs = []
         self.timezone = timezone
+        self.tank_count = tank_count
 
         self.polling_node_values = {}
 
     def set_polling_nodes(self):
-        nodes = []
-        for node_base in self._polling_node_name_bases:
-            node = PollingNode(node_base)
-            nodes.append(node)
+        nodes = [PollingNode.tank_level(name) for name in tank_names(self.tank_count)]
+        for node_base in self._analog_node_name_bases:
+            nodes.append(PollingNode(node_base))
         self.polling_nodes = nodes
 
     def get_alarm_node_ids(self):
@@ -253,11 +301,15 @@ class Overview:
     async def setup(self):
         self.set_polling_nodes()
         self.set_alarm_objs()
+
+        for node in self.polling_nodes:
+            await node.resolve(self.client)
+            log.info(f"Polling {node.name} from {node.node_id}")
+
         node_ids = [
             node_id
             for node_id in self.get_polling_node_ids() + self.get_alarm_node_ids()
         ]
-
         await self.client.register_nodes(node_ids)
         await self.create_alarm_subs()
 
@@ -325,14 +377,6 @@ class Overview:
         except Exception as e:
             log.error(f"Error creating shared alarm subscription: {e}")
             raise
-
-    async def get_polling_value(self, name: str):
-        """
-        Get the polling data for this injector.
-        """
-        node_id = f'ns=3;s="DB_OPCUA_AnalogValues"."{name}"'
-        value = await self.client.get_node_id_val(node_id)
-        return value
 
     async def main_loop(self):
         await self.update_ui()
@@ -416,7 +460,9 @@ class Overview:
         """
         Update the UI with the latest data.
         """
-        for name in self._polling_node_name_bases:
-            await self.app.set_tag(name, await self.get_polling_value(name))
+        for node in self.polling_nodes:
+            await self.app.set_tag(
+                node.name, await self.client.get_node_id_val(node.node_id)
+            )
 
         await self.update_reconciliation_ui()

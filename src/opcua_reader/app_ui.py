@@ -31,5 +31,6 @@ class OpcuaReaderUI(ui.UI, display_name="Fuel Additive"):
             injector_specs,
             self.config.timezone.value,
             self.config.skid_name.value,
+            tank_count=int(self.config.tank_count.value),
         ):
             self.add_element(elem)

@@ -38,6 +38,21 @@
                     "default": "",
                     "x-position": 1
                 },
+                "tank_count": {
+                    "title": "Number of Tanks",
+                    "x-name": "tank_count",
+                    "x-hidden": false,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "x-required": false,
+                    "description": "Number of additive storage tanks on the skid. A 'Level Tank N (%)' reading is shown for each, read from the PLC's LevelTankN value.",
+                    "default": 2,
+                    "x-position": 2,
+                    "minimum": 1,
+                    "maximum": 6
+                },
                 "injectors": {
                     "title": "Injectors",
                     "x-name": "injectors",
@@ -45,7 +60,7 @@
                     "type": "array",
                     "x-required": true,
                     "description": "List of injectors, names MUST be unique",
-                    "x-position": 2,
+                    "x-position": 3,
                     "items": {
                         "title": "Injector",
                         "x-name": "injector",
@@ -92,7 +107,7 @@
                     "x-required": false,
                     "description": "Timezone of the report, e.g. America/New_York",
                     "default": "Asia/Riyadh",
-                    "x-position": 3
+                    "x-position": 4
                 },
                 "report_restart_time": {
                     "title": "Report Restart Time",
@@ -105,7 +120,7 @@
                     "x-required": false,
                     "description": "Time in Hrs to restart the report, 6=6am, 12=noon, 17=5pm etc.",
                     "default": 10,
-                    "x-position": 4
+                    "x-position": 5
                 }
             },
             "additionalElements": true,

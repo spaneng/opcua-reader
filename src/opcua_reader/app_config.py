@@ -45,6 +45,17 @@ class OpcuaReaderConfig(config.Schema):
         ),
         default="",
     )
+    tank_count = config.Integer(
+        "Number of Tanks",
+        description=(
+            "Number of additive storage tanks on the skid. A 'Level Tank N (%)' "
+            "reading is shown for each, read from the PLC's LevelTankN value."
+        ),
+        default=2,
+        minimum=1,
+        maximum=6,
+        name="tank_count",
+    )
     injectors = config.Array(
         "Injectors",
         description="List of injectors, names MUST be unique",
