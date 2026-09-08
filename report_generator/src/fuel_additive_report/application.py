@@ -57,6 +57,18 @@ class FuelAdditiveReportGenerator(Application):
             raise RuntimeError("No reconciliation data found for any device.")
         return files
 
+    def device_display_name(self, agent_id: int) -> str | None:
+        """The device's own name, e.g. "SJBP", for skids with no skid_name set.
+
+        DEVICE_MAP comes from the report's deployment config rather than the
+        snapshot, so it is current rather than whatever the device was called
+        on the day being reported.
+        """
+        device = (self.received_deployment_config.get("DEVICE_MAP") or {}).get(
+            str(agent_id)
+        ) or {}
+        return device.get("display_name") or device.get("name")
+
     async def get_context(self, agent_id: int, period_end: datetime):
         """
         This function gets context for the report.
@@ -145,7 +157,9 @@ class FuelAdditiveReportGenerator(Application):
             log.debug(f"Successful attempt: {attempt}")
             context["injectors"] = injectors
             context["skid_name"] = (
-                reconciliation_state.get("skid_name") or f"skid-{agent_id}"
+                reconciliation_state.get("skid_name")
+                or self.device_display_name(agent_id)
+                or f"skid-{agent_id}"
             )
             # "as at" the reading this report was built from, not the run time.
             context["report_time"] = (

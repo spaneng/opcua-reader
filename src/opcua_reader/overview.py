@@ -405,9 +405,10 @@ class Overview:
                 "injectors": reconciliation_injectors_meta(
                     [(inj.index, inj.display_name) for inj in self.injectors]
                 ),
-                "skid_name": (
-                    self.app.config.skid_name.value or self.app.app_display_name
-                ),
+                # Left empty when unset so the report can fall back to the
+                # device's name; substituting the app display name here made
+                # every skid's PDF "Fuel Additive OPCUA Reader.pdf".
+                "skid_name": self.app.config.skid_name.value or "",
             },
         )
 
