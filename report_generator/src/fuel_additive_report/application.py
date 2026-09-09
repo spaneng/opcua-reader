@@ -157,92 +157,96 @@ class FuelAdditiveReportGenerator(Application):
             "report_time": day_end.strftime("%I:%M%p").lower(),
         }
 
-        # Iterate back through the data to find the last injection of the day.
-        for attempt, message in enumerate(reversed(messages), start=1):
+        # Rebuild the day's final state by merging the messages in order
+        # rather than reading one of them. A ui_state message carries only
+        # what changed in that update, so any single snapshot has holes: the
+        # first cut of this reported NRBP with a populated Inj 2 and an
+        # all-zero Inj 1, because the message it landed on simply had not
+        # touched Inj 1's keys. Merging chronologically leaves each key at its
+        # last value of the day, which is what a day total is. For a device
+        # that does publish full snapshots this is a no-op - the last message
+        # overwrites every key anyway.
+        merged: dict = {}
+        injector_meta = []
+        snapshot_skid_name = None
+        last_update = None
+        for message in messages:
             state = message.data.get("state") if isinstance(message.data, dict) else None
             reconciliation_state = find_reconciliation(state)
-            log.debug(f"Attempt: {attempt}, Timestamp: {message.timestamp}")
-
             if reconciliation_state is None:
-                log.debug("No reconciliation state found, trying again...")
                 continue
 
-            children = reconciliation_state.get("children", {})
-            injector_meta = reconciliation_state.get("injectors") or fallback_injectors
-            if not injector_meta:
-                log.debug("No injector metadata found, trying again...")
-                continue
+            if reconciliation_state.get("injectors"):
+                injector_meta = reconciliation_state["injectors"]
+            if reconciliation_state.get("skid_name"):
+                snapshot_skid_name = reconciliation_state["skid_name"]
 
-            injectors = []
-            zero_flow_injectors = 0
-            for injector in injector_meta:
-                injector_name = injector["name"]
+            children = reconciliation_state.get("children") or {}
+            for key, value in children.items():
+                if isinstance(value, dict) and value.get("currentValue") is not None:
+                    merged[key] = value
+                    last_update = message.timestamp
 
-                flowmeter_total = children.get(
-                    f"{injector_name}_header_LDayTotal", {}
-                ).get("currentValue", 0)
-                if flowmeter_total is None or flowmeter_total < 100:
-                    zero_flow_injectors += 1
-
-                injectors.append(
-                    {
-                        "index": injector["index"],
-                        "injector_name": injector["displayName"],
-                        "flowmeter_total": flowmeter_total,
-                        "actual_injection_detergent": children.get(
-                            f"{injector_name}_LDayTotal", {}
-                        ).get("currentValue", 0),
-                        "calculated_detergent": children.get(
-                            f"{injector_name}CalcedLTotal", {}
-                        ).get("currentValue", 0),
-                        "difference": children.get(
-                            f"{injector_name}Difference", {}
-                        ).get("currentValue", 0),
-                    }
-                )
-
-            if zero_flow_injectors == len(injector_meta):
-                log.debug("All injectors have zero flow, trying again...")
-                continue
-
-            log.debug(f"Successful attempt: {attempt}")
-            context["injectors"] = injectors
-            # DEVICE_MAP wins over the snapshot's own skid_name. Four of the
-            # five CRDD skids publish skid_name as the *application's* display
-            # name ("Fuel Additive OPCUA Reader"), so trusting the snapshot
-            # both mislabels them and gives four skids one identical file name
-            # - and attachment keys are (channel, message, filename), so
-            # same-named files overwrite each other and only one survives.
-            context["skid_name"] = (
-                self.device_display_name(agent_id)
-                or reconciliation_state.get("skid_name")
-                or f"skid-{agent_id}"
+        injector_meta = injector_meta or fallback_injectors
+        if not injector_meta or not merged:
+            log.error(
+                f"No reconciliation data found for agent {agent_id} "
+                f"({len(injector_meta)} injector(s), {len(merged)} value(s) merged)."
             )
-            # Carried by both the heading and the file name, so a report that
-            # has been emailed on says which skid and which day without being
-            # opened. Whatever the skid is called, the label follows.
-            context["report_label"] = report_label(context["skid_name"], day_start)
-            context["report_day"] = day_start
-            # "as at" the reading this report was built from, not the run time.
+            return None
+
+        def value_of(key):
+            return (merged.get(key) or {}).get("currentValue", 0)
+
+        injectors = []
+        zero_flow_injectors = 0
+        for injector in injector_meta:
+            injector_name = injector["name"]
+
+            flowmeter_total = value_of(f"{injector_name}_header_LDayTotal")
+            if flowmeter_total is None or flowmeter_total < 100:
+                zero_flow_injectors += 1
+
+            injectors.append(
+                {
+                    "index": injector["index"],
+                    "injector_name": injector["displayName"],
+                    "flowmeter_total": flowmeter_total,
+                    "actual_injection_detergent": value_of(f"{injector_name}_LDayTotal"),
+                    "calculated_detergent": value_of(f"{injector_name}CalcedLTotal"),
+                    "difference": value_of(f"{injector_name}Difference"),
+                }
+            )
+
+        if zero_flow_injectors == len(injector_meta):
+            log.error(f"Every injector read zero flow for agent {agent_id}.")
+            return None
+
+        context["injectors"] = injectors
+        # DEVICE_MAP wins over the snapshot's own skid_name. Four of the five
+        # CRDD skids publish skid_name as the *application's* display name, so
+        # trusting the snapshot both mislabels them and gives four skids one
+        # identical file name - and attachment keys are (channel, message,
+        # filename), so same-named files overwrite each other.
+        context["skid_name"] = (
+            self.device_display_name(agent_id)
+            or snapshot_skid_name
+            or f"skid-{agent_id}"
+        )
+        # Carried by both the heading and the file name, so a report that has
+        # been emailed on says which skid and which day without being opened.
+        context["report_label"] = report_label(context["skid_name"], day_start)
+        context["report_day"] = day_start
+        # "as at" the last reading that fed the report, not the run time.
+        if last_update is not None:
             context["report_time"] = (
-                message.timestamp.astimezone(ZoneInfo(REPORT_TIMEZONE))
+                last_update.astimezone(ZoneInfo(REPORT_TIMEZONE))
                 .strftime("%I:%M%p")
                 .lower()
             )
 
-            # totals
-            context["total_gasoline"] = children.get("GasTotal", {}).get(
-                "currentValue", 0
-            )
-            context["total_calculated_detergent"] = children.get(
-                "CalcedInjectedTotal", {}
-            ).get("currentValue", 0)
-            context["total_actual_detergent_injected"] = children.get(
-                "ActualInjectedTotal", {}
-            ).get("currentValue", 0)
-            context["difference"] = children.get("Difference", {}).get(
-                "currentValue", 0
-            )
-            return context
-
-        return None
+        context["total_gasoline"] = value_of("GasTotal")
+        context["total_calculated_detergent"] = value_of("CalcedInjectedTotal")
+        context["total_actual_detergent_injected"] = value_of("ActualInjectedTotal")
+        context["difference"] = value_of("Difference")
+        return context
