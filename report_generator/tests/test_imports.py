@@ -63,9 +63,35 @@ def test_report_label_carries_the_reported_day():
     )
 
 
-def test_report_filename_has_no_path_separator():
+def test_report_filename_survives_the_wire():
+    """No "/" (path separator) and no spaces (aiohttp percent-encodes them
+    into the multipart filename, and the "%20" reaches the emailed
+    attachment's name)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
     from fuel_additive_report.application import report_filename
 
-    name = report_filename("SJBP - 12/09/26")
-    assert name == "SJBP - 12-09-26.pdf"
-    assert "/" not in name
+    riyadh = ZoneInfo("Asia/Riyadh")
+    day = datetime(2026, 9, 12, tzinfo=riyadh)
+
+    assert report_filename("SJBP", day) == "SJBP_12-09-26.pdf"
+    # skid names carry spaces of their own
+    assert report_filename("Saad BP", day) == "Saad_BP_12-09-26.pdf"
+    for skid in ("SJBP", "Saad BP", "DCA Injection Skids"):
+        name = report_filename(skid, day)
+        assert "/" not in name and " " not in name
+
+
+def test_each_skid_gets_its_own_file_name():
+    """Four of the five skids report the same skid_name, so the file name has
+    to come from the device - attachments are keyed on filename and identical
+    names overwrite each other."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from fuel_additive_report.application import report_filename
+
+    day = datetime(2026, 9, 12, tzinfo=ZoneInfo("Asia/Riyadh"))
+    names = {report_filename(s, day) for s in ("NRBP", "QSBP", "SRBP", "Saad BP", "SJBP")}
+    assert len(names) == 5

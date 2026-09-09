@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from pydoover.models import File
+from pydoover.models.data.exceptions import DooverAPIError
 from pydoover.reports import Application
 
 from .app_config import FuelAdditiveReportConfig
@@ -22,14 +23,22 @@ def report_label(skid_name: str, day: datetime) -> str:
     return f"{skid_name} - {day:%d/%m/%y}"
 
 
-def report_filename(label: str) -> str:
-    """``report_label`` as a file name.
+def report_filename(skid_name: str, day: datetime) -> str:
+    """The label as a file name, e.g. ``SJBP_09-09-26.pdf``.
 
-    "/" is a path separator, so it can be neither a file name nor an S3
-    attachment key - a slash there arrives at the recipient as a mangled name
-    or a nested key. The date separator becomes "-" for the file only.
+    Built from the parts rather than from ``report_label`` because neither
+    separator in the label survives the trip:
+
+    - "/" is a path separator, so it can be neither a file name nor an S3
+      attachment key.
+    - Spaces are percent-encoded by ``aiohttp.FormData``, which defaults to
+      ``quote_fields=True`` and so writes ``filename="a%20b.pdf"`` into the
+      multipart header. doover-data stores ``field.file_name()`` verbatim, so
+      the "%20" reaches the recipient in the name of the emailed attachment.
+      Skid names have spaces of their own ("Saad BP"), so this is not just
+      about the separator.
     """
-    return f"{label.replace('/', '-')}.pdf"
+    return f"{skid_name.replace(' ', '_')}_{day:%d-%m-%y}.pdf"
 
 
 def find_reconciliation(obj, target_key="Reconciliation"):
@@ -69,7 +78,7 @@ class FuelAdditiveReportGenerator(Application):
                 continue
 
             pdf_bytes = build_pdf(context)
-            filename = report_filename(context["report_label"])
+            filename = report_filename(context["skid_name"], context["report_day"])
             files.append(File(filename, "application/pdf", len(pdf_bytes), pdf_bytes))
 
         if not files:
@@ -105,6 +114,29 @@ class FuelAdditiveReportGenerator(Application):
         )
         day_start = day_end - timedelta(days=1)
 
+        # The injector roster lives on the channel aggregate, not reliably in
+        # each message. ui_state messages are partial - most carry the
+        # Reconciliation block with an empty `injectors` list, because the
+        # roster only changes when the app restarts. Requiring it per message
+        # is why NRBP, QSBP and SRBP produced no report on 09/09 despite
+        # publishing 144, 134 and 128 messages that day.
+        fallback_injectors = []
+        try:
+            aggregate = await self.api.fetch_channel_aggregate(
+                "ui_state", agent_id=agent_id
+            )
+        except DooverAPIError as e:
+            # Non-fatal: a message that carries its own roster still reports.
+            log.warning(f"Could not fetch ui_state aggregate for {agent_id}: {e}")
+        else:
+            agg_state = (aggregate.data or {}).get("state")
+            agg_recon = find_reconciliation(agg_state) or {}
+            fallback_injectors = agg_recon.get("injectors") or []
+            log.info(
+                f"Aggregate for agent {agent_id} lists "
+                f"{len(fallback_injectors)} injector(s)."
+            )
+
         messages = await self.api.iter_messages(
             "ui_state",
             before=day_end,
@@ -136,7 +168,7 @@ class FuelAdditiveReportGenerator(Application):
                 continue
 
             children = reconciliation_state.get("children", {})
-            injector_meta = reconciliation_state.get("injectors") or []
+            injector_meta = reconciliation_state.get("injectors") or fallback_injectors
             if not injector_meta:
                 log.debug("No injector metadata found, trying again...")
                 continue
@@ -175,15 +207,22 @@ class FuelAdditiveReportGenerator(Application):
 
             log.debug(f"Successful attempt: {attempt}")
             context["injectors"] = injectors
+            # DEVICE_MAP wins over the snapshot's own skid_name. Four of the
+            # five CRDD skids publish skid_name as the *application's* display
+            # name ("Fuel Additive OPCUA Reader"), so trusting the snapshot
+            # both mislabels them and gives four skids one identical file name
+            # - and attachment keys are (channel, message, filename), so
+            # same-named files overwrite each other and only one survives.
             context["skid_name"] = (
-                reconciliation_state.get("skid_name")
-                or self.device_display_name(agent_id)
+                self.device_display_name(agent_id)
+                or reconciliation_state.get("skid_name")
                 or f"skid-{agent_id}"
             )
             # Carried by both the heading and the file name, so a report that
             # has been emailed on says which skid and which day without being
             # opened. Whatever the skid is called, the label follows.
             context["report_label"] = report_label(context["skid_name"], day_start)
+            context["report_day"] = day_start
             # "as at" the reading this report was built from, not the run time.
             context["report_time"] = (
                 message.timestamp.astimezone(ZoneInfo(REPORT_TIMEZONE))
