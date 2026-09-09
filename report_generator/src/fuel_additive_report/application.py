@@ -13,6 +13,25 @@ log = logging.getLogger(__name__)
 REPORT_TIMEZONE = "Asia/Riyadh"
 
 
+def report_label(skid_name: str, day: datetime) -> str:
+    """The heading a report carries, e.g. ``SJBP - 12/09/26``.
+
+    ``day`` is the day being reported on, not the day the report ran - these
+    run after midnight, so the two differ.
+    """
+    return f"{skid_name} - {day:%d/%m/%y}"
+
+
+def report_filename(label: str) -> str:
+    """``report_label`` as a file name.
+
+    "/" is a path separator, so it can be neither a file name nor an S3
+    attachment key - a slash there arrives at the recipient as a mangled name
+    or a nested key. The date separator becomes "-" for the file only.
+    """
+    return f"{label.replace('/', '-')}.pdf"
+
+
 def find_reconciliation(obj, target_key="Reconciliation"):
     """
     Recursively search for the sub-object with the given key
@@ -50,7 +69,7 @@ class FuelAdditiveReportGenerator(Application):
                 continue
 
             pdf_bytes = build_pdf(context)
-            filename = f"{context['skid_name']}.pdf"
+            filename = report_filename(context["report_label"])
             files.append(File(filename, "application/pdf", len(pdf_bytes), pdf_bytes))
 
         if not files:
@@ -161,6 +180,10 @@ class FuelAdditiveReportGenerator(Application):
                 or self.device_display_name(agent_id)
                 or f"skid-{agent_id}"
             )
+            # Carried by both the heading and the file name, so a report that
+            # has been emailed on says which skid and which day without being
+            # opened. Whatever the skid is called, the label follows.
+            context["report_label"] = report_label(context["skid_name"], day_start)
             # "as at" the reading this report was built from, not the run time.
             context["report_time"] = (
                 message.timestamp.astimezone(ZoneInfo(REPORT_TIMEZONE))

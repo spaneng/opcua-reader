@@ -25,6 +25,7 @@ def test_build_pdf():
 
     context = {
         "skid_name": "Test Skid",
+        "report_label": "Test Skid - 20/08/26",
         "report_time": "01:00:am",
         "report_date": "20-08-2026",
         "injectors": [
@@ -45,3 +46,26 @@ def test_build_pdf():
     pdf = build_pdf(context)
     assert isinstance(pdf, bytes)
     assert pdf.startswith(b"%PDF")
+
+
+def test_report_label_carries_the_reported_day():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from fuel_additive_report.application import report_label
+
+    riyadh = ZoneInfo("Asia/Riyadh")
+    label = report_label("SJBP", datetime(2026, 9, 12, tzinfo=riyadh))
+    assert label == "SJBP - 12/09/26"
+    # whatever the skid is called, the label follows
+    assert (
+        report_label("NRBP", datetime(2026, 1, 5, tzinfo=riyadh)) == "NRBP - 05/01/26"
+    )
+
+
+def test_report_filename_has_no_path_separator():
+    from fuel_additive_report.application import report_filename
+
+    name = report_filename("SJBP - 12/09/26")
+    assert name == "SJBP - 12-09-26.pdf"
+    assert "/" not in name

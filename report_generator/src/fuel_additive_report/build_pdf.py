@@ -18,9 +18,9 @@ class PDF(FPDF):
     PAGE_MARGIN_MM = 16
     LOGO_PATH = str(Path(__file__).parent / "ZGH_logon.png.webp")
     
-    def __init__(self, skid_name, report_time, report_date, *args, **kwargs):
+    def __init__(self, skid_label, report_time, report_date, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.skid_name = skid_name
+        self.skid_label = skid_label
         self.report_time = report_time
         self.report_date = report_date
     
@@ -46,8 +46,15 @@ class PDF(FPDF):
         self.cell(col_w, 8, "RECONCILIATION", align="C", new_y="NEXT", new_x="LMARGIN")
         # skid line
         self.set_xy(self.PAGE_MARGIN_MM + col_w, self.PAGE_MARGIN_MM + 12)
-        self.set_font("Helvetica", "", 12)
-        skid_text = f"Skid: {self.skid_name}" if self.skid_name else "Skid:"
+        skid_text = f"Skid: {self.skid_label}" if self.skid_label else "Skid:"
+        # The label carries the date as well as the skid name, so on a skid
+        # with a wordy name it outgrows the middle column and runs over the
+        # logo and the date boxes. Step the size down until it fits.
+        size = 12
+        self.set_font("Helvetica", "", size)
+        while size > 7 and self.get_string_width(skid_text) > col_w:
+            size -= 0.5
+            self.set_font("Helvetica", "", size)
         self.cell(col_w, 6, skid_text, align="C")
 
         # Right: Time/Date boxed fields
@@ -172,7 +179,7 @@ class PDF(FPDF):
 
 def build_pdf(context: dict) -> bytes:
     """Render the reconciliation report PDF and return its bytes."""
-    skid_name = context["skid_name"]
+    skid_label = context["report_label"]
     report_time = context["report_time"]
     report_date = context["report_date"]
     
@@ -193,7 +200,7 @@ def build_pdf(context: dict) -> bytes:
         "Difference": str(context["difference"]),
     }
     
-    pdf = PDF(skid_name, report_time, report_date, format="A4", unit="mm")
+    pdf = PDF(skid_label, report_time, report_date, format="A4", unit="mm")
     pdf.set_auto_page_break(auto=True, margin=pdf.PAGE_MARGIN_MM)
     pdf.add_page()
 
