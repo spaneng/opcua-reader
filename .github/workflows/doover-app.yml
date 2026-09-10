@@ -1,0 +1,24 @@
+name: Doover App
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Serialize releases so an older run cannot replace a newer Latest version.
+concurrency:
+  group: doover-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  app:
+    if: github.ref == 'refs/heads/master'
+    uses: getdoover/workflows/.github/workflows/app.yml@0f36af28545299b9b53f0924769e2dd5a4bf8d93
+    with:
+      python-version: '3.13'
+      runs-on: ubuntu-24.04-arm
+    secrets: inherit

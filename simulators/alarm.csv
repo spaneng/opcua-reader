@@ -1,0 +1,80 @@
+Name,Type,Address,Description,Flag1,Flag2,Flag3,Flag4,Flag5
+AlarmTexts[0],String,0.0,"",False,True,True,True,False
+AlarmTexts[1],String,256.0,"Level Switch Tank 1 Alarm",False,True,True,True,False
+AlarmTexts[2],String,512.0,"",False,True,True,True,False
+AlarmTexts[3],String,768.0,"Emergency Stop Alarm (-24ESD3)",False,True,True,True,False
+AlarmTexts[4],String,1024.0,"",False,True,True,True,False
+AlarmTexts[5],String,1280.0,"",False,True,True,True,False
+AlarmTexts[6],String,1536.0,"",False,True,True,True,False
+AlarmTexts[7],String,1792.0,"",False,True,True,True,False
+AlarmTexts[8],String,2048.0,"",False,True,True,True,False
+AlarmTexts[9],String,2304.0,"",False,True,True,True,False
+AlarmTexts[10],String,2560.0,"Spill Switch Activated (-LD01)",False,True,True,True,False
+AlarmTexts[11],String,2816.0,"High High Alarm Level Tank 1 (-28U2 )",False,True,True,True,False
+AlarmTexts[12],String,3072.0,"",False,True,True,True,False
+AlarmTexts[13],String,3328.0,"High High Alarm Level Tank 2 (-28U5)",False,True,True,True,False
+AlarmTexts[14],String,3584.0,"",False,True,True,True,False
+AlarmTexts[15],String,3840.0,"High High Alarm Temperature Pump 1 (-20U1)",False,True,True,True,False
+AlarmTexts[16],String,4096.0,"Low Low Alarm Temperature Pump 1 (-20U1)",False,True,True,True,False
+AlarmTexts[17],String,4352.0,"High High Alarm Temperature Pump 2 (-20U3)",False,True,True,True,False
+AlarmTexts[18],String,4608.0,"Low Low Alarm Temperature Pump 2 (-20U3)",False,True,True,True,False
+AlarmTexts[19],String,4864.0,"High High Alarm Temperature Shelter (-19U4)",False,True,True,True,False
+AlarmTexts[20],String,5120.0,"Low Low Alarm Temperature Shelter (-19U4)",False,True,True,True,False
+AlarmTexts[21],String,5376.0,"High High Alarm Pressure Transmitter (-19U1)",False,True,True,True,False
+AlarmTexts[22],String,5632.0,"Low Low Alarm Pressure Transmitter (-19U1)",False,True,True,True,False
+AlarmTexts[23],String,5888.0,"",False,True,True,True,False
+AlarmTexts[24],String,6144.0,"",False,True,True,True,False
+AlarmTexts[25],String,6400.0,"",False,True,True,True,False
+AlarmTexts[26],String,6656.0,"",False,True,True,True,False
+AlarmTexts[27],String,6912.0,"",False,True,True,True,False
+AlarmTexts[28],String,7168.0,"",False,True,True,True,False
+AlarmTexts[29],String,7424.0,"",False,True,True,True,False
+AlarmTexts[30],String,7680.0,"",False,True,True,True,False
+AlarmTexts[31],String,7936.0,"Primary Tranformer Alarm (-10Q5)",False,True,True,True,False
+AlarmTexts[32],String,8192.0,"Secondary Tranformer Alarm (-10F6)",False,True,True,True,False
+AlarmTexts[33],String,8448.0,"Fire Alarm (--SM01)",False,True,True,True,False
+AlarmTexts[34],String,8704.0,"No Power Fire Panel (--SM01)",False,True,True,True,False
+AlarmTexts[35],String,8960.0,"Pump 1 Or Pump 2 Is Running But No Additive Flow Has Been Detected (-21B1 to -21B7 + -22B1 to -22B3)",False,True,True,True,False
+AlarmTexts[36],String,9216.0,"",False,True,True,True,False
+AlarmTexts[37],String,9472.0,"Both Pumps In Power Fault",False,True,True,True,False
+AlarmTexts[38],String,9728.0,"Both Pumps In Trip",False,True,True,True,False
+AlarmTexts[39],String,9984.0,"",False,True,True,True,False
+AlarmTexts[40],String,10240.0,"",False,True,True,True,False
+AlarmTexts[41],String,10496.0,"",False,True,True,True,False
+AlarmTexts[42],String,10752.0,"",False,True,True,True,False
+AlarmTexts[43],String,11008.0,"",False,True,True,True,False
+AlarmTexts[44],String,11264.0,"",False,True,True,True,False
+AlarmTexts[45],String,11520.0,"Airco Fail Alarm",False,True,True,True,False
+AlarmTexts[46],String,11776.0,"",False,True,True,True,False
+AlarmTexts[47],String,12032.0,"",False,True,True,True,False
+AlarmTexts[48],String,12288.0,"",False,True,True,True,False
+AlarmTexts[49],String,12544.0,"",False,True,True,True,False
+AlarmTexts[50],String,12800.0,"No Main Flow Detected on Header 1",False,True,True,True,False
+AlarmTexts[51],String,13056.0,"No Main Flow Detected on Header 2",False,True,True,True,False
+AlarmTexts[52],String,13312.0,"No Main Flow Detected on Header 3",False,True,True,True,False
+AlarmTexts[53],String,13568.0,"No Main Flow Detected on Header 4",False,True,True,True,False
+AlarmTexts[54],String,13824.0,"No Main Flow Detected on Header 5",False,True,True,True,False
+AlarmTexts[55],String,14080.0,"No Main Flow Detected on Header 6",False,True,True,True,False
+AlarmTexts[56],String,14336.0,"Low Low Alarm Level Tank 1 (-28U2 )",False,True,True,True,False
+AlarmTexts[57],String,14592.0,"Low Low Alarm Level Tank 2 (-28U5)",False,True,True,True,False
+AlarmTexts[58],String,14848.0,"",False,True,True,True,False
+AlarmTexts[59],String,15104.0,"",False,True,True,True,False
+AlarmTexts[60],String,15360.0,"Injection Pump 1 Power Alarm (-11F1.1)",False,True,True,True,False
+AlarmTexts[61],String,15616.0,"Injection Pump 1 Trip Alarm (-11F1.1)",False,True,True,True,False
+AlarmTexts[62],String,15872.0,"",False,True,True,True,False
+AlarmTexts[63],String,16128.0,"",False,True,True,True,False
+AlarmTexts[64],String,16384.0,"",False,True,True,True,False
+AlarmTexts[65],String,16640.0,"Injection Pump 2 Power Alarm (-11F5.1)",False,True,True,True,False
+AlarmTexts[66],String,16896.0,"Injection Pump 2 Trip Alarm (-11F5.1)",False,True,True,True,False
+AlarmTexts[67],String,17152.0,"No Flow (-21B1) Detected While Injection Valve 1 Is Open",False,True,True,True,False
+AlarmTexts[68],String,17408.0,"No Flow (-21B3) Detected While Injection Valve 2 Is Open",False,True,True,True,False
+AlarmTexts[69],String,17664.0,"No Flow (-21B5) Detected While Injection Valve 3 Is Open",False,True,True,True,False
+AlarmTexts[70],String,17920.0,"No Flow (-21B5) Detected While Injection Valve 4 Is Open",False,True,True,True,False
+AlarmTexts[71],String,18176.0,"No Flow (-21B5) Detected While Injection Valve 5 Is Open",False,True,True,True,False
+AlarmTexts[72],String,18432.0,"No Flow (-21B5) Detected While Injection Valve 6 Is Open",False,True,True,True,False
+AlarmTexts[73],String,18688.0,"Flow (-21B1) Detected While Injection Valve 1 Is Closed",False,True,True,True,False
+AlarmTexts[74],String,18944.0,"Flow (-21B3) Detected While Injection Valve 2 Is Closed",False,True,True,True,False
+AlarmTexts[75],String,19200.0,"Flow (-21B5) Detected While Injection Valve 3 Is Closed",False,True,True,True,False
+AlarmTexts[76],String,19456.0,"Flow (-21B5) Detected While Injection Valve 4 Is Closed",False,True,True,True,False
+AlarmTexts[77],String,19712.0,"Flow (-21B5) Detected While Injection Valve 5 Is Closed",False,True,True,True,False
+AlarmTexts[78],String,19968.0,"Flow (-21B5) Detected While Injection Valve 6 Is Closed",False,True,True,True,False

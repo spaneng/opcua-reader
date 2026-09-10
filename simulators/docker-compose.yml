@@ -3,24 +3,27 @@ services:
   #   image: spaneng/doover_device_agent:apps
   #   network_mode: host
 
-  # sample_simulator:
-  #   build: ./sample
-  #   network_mode: host
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - device_agent
-  #   environment:
-  #     - APP_KEY=sim_app_key
-
-  sample_application:
-    build: ../
-    network_mode: host
+  opcua_server_simulator:
+    build: ./sample
+    # network_mode: host
     restart: unless-stopped
     # depends_on:
     #   - device_agent
-    #   - sample_simulator
     environment:
-      - APP_KEY=opcua_reader_iiwsw
-    #   - CONFIG_FP=/app_config.json
+      - APP_KEY=sim_app_key
+    ports:
+      - 4840:4840
+    attach: false      
+
+  application:
+    build: ../
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      # - device_agent
+      - opcua_server_simulator
+    environment:
+      - APP_KEY=fuel_additive_opcua_reader_z2g0e
+      - CONFIG_FP=/app/simulators/app_config.json
     # volumes:
     #   - ./app_config.json:/app_config.json

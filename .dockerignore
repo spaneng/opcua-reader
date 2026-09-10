@@ -1,1 +1,8 @@
 .venv
+.git
+.github
+.appgen
+report_generator/
+simulators/
+assets/
+*.pdf

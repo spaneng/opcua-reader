@@ -1,18 +1,23 @@
 import logging
 import time
+from typing import Any
 
-from asyncua import Client
 from pydoover.docker import Application
-from pydoover.utils.alarm import create_alarm
 
 from .app_config import OpcuaReaderConfig
-from .app_ui import OpcuaReaderUI, element_name, slider_name
+from .app_ui import OpcuaReaderUI
+from .injector import Injector
+from .opcua_client import AsyncUAClient
+from .overview import Overview
 
 log = logging.getLogger()
 
-# The data plane deserialises severity as the serde variant name, not the int
-# value that pydoover.models.NotificationSeverity carries.
-NOTIFICATION_SEVERITY_WARN = "Warn"
+# How long a pending ui_state aggregate patch may coalesce before the DDA
+# pushes it to the cloud.
+UI_STATE_MAX_AGE_SECS = 5
+# The reconciliation report reads ui_state *message history*, so periodically
+# log a snapshot of the patched values as a channel message.
+UI_STATE_LOG_PERIOD_SECS = 300
 
 
 class OpcuaReaderApplication(Application):
@@ -23,117 +28,104 @@ class OpcuaReaderApplication(Application):
         self.started = time.time()
         self.loop_target_period = 5
 
-        self.server_uri = self.config.opcua_uri.value
-        self.vars = self.config.opcua_values.elements
+        # name -> (path below app node, values) queued for the next ui_state patch
+        self._pending_ui_values: dict[tuple[str, ...], dict[str, Any]] = {}
+        self._pending_ui_props: dict[tuple[str, ...], dict[str, Any]] = {}
+        self._last_ui_state_log = 0.0
 
-        self.alarms = {}
-        self.init_alarms()
+        # Initialise OPCUA Client
+        self.server_uri = self.config.opcua_uri.value
+        self.opcua_client = AsyncUAClient(self.server_uri)
+        await self.opcua_client.setup()
+        log.info("OPC UA Client setup complete.")
+
+        # Initialise Injectors
+        self.injectors = []
+        for inj_conf in self.config.injectors.elements:
+            injector = Injector(
+                int(inj_conf.injector_index.value),
+                inj_conf.injector_name.value,
+                self.opcua_client,
+                self,
+                self.config.timezone.value,
+            )
+            await injector.setup()
+            self.injectors.append(injector)
+
+            log.info(
+                f"Injector {inj_conf.injector_name.value}; "
+                f"{inj_conf.injector_index.value} initialized."
+            )
+
+        # Initialise Overview
+        self.overview = Overview(
+            self.opcua_client,
+            self,
+            injectors=self.injectors,
+            timezone=self.config.timezone.value,
+            tank_count=int(self.config.tank_count.value),
+        )
+        await self.overview.setup()
 
     async def main_loop(self):
-        values = await self.get_server_values()
-        if not values:
-            log.error("Failed to fetch server values.")
+        await self.overview.main_loop()
+        for injector in self.injectors:
+            await injector.main_loop()
+
+        await self.flush_ui_values()
+
+    # --- legacy remote-component value plumbing -----------------------------
+    #
+    # The HMI and Reconciliation widgets read literal `currentValue`s from
+    # their children in ui_state (v1 behaviour), so those values cannot be
+    # tag-bound. Instead, injectors and the overview queue values here and the
+    # main loop flushes them as one deep-merge patch on the ui_state channel.
+
+    def queue_ui_values(
+        self,
+        path: list[str],
+        values: dict[str, Any],
+        node_props: dict[str, Any] | None = None,
+    ):
+        """Queue literal currentValue updates for elements below the app node.
+
+        ``path`` is the chain of element names below this app's node in
+        ui_state, ``values`` maps child element name -> value, and
+        ``node_props`` are extra properties merged onto the element at
+        ``path`` itself.
+        """
+        key = tuple(path)
+        self._pending_ui_values.setdefault(key, {}).update(values)
+        if node_props:
+            self._pending_ui_props.setdefault(key, {}).update(node_props)
+
+    def _build_ui_state_patch(self) -> dict[str, Any]:
+        app_children: dict[str, Any] = {}
+        for key in set(self._pending_ui_values) | set(self._pending_ui_props):
+            children = app_children
+            node: dict[str, Any] = {}
+            for name in key:
+                node = children.setdefault(name, {})
+                children = node.setdefault("children", {})
+            node.update(self._pending_ui_props.get(key, {}))
+            for name, value in self._pending_ui_values.get(key, {}).items():
+                children.setdefault(name, {})["currentValue"] = value
+
+        return {"state": {"children": {self.app_key: {"children": app_children}}}}
+
+    async def flush_ui_values(self):
+        if not (self._pending_ui_values or self._pending_ui_props):
             return
 
-        for value in values:
-            await self.set_tag(
-                element_name(value["nsidx"], value["var_name"]), value["value"]
-            )
+        patch = self._build_ui_state_patch()
+        self._pending_ui_values = {}
+        self._pending_ui_props = {}
 
-    def init_alarms(self):
-        # Alarm sliders live inside submodules, so look them up through the
-        # UI's recursive interaction registry rather than as attributes.
-        interactions = self.ui.get_interactions()
+        await self.update_channel_aggregate(
+            "ui_state", patch, max_age_secs=UI_STATE_MAX_AGE_SECS
+        )
 
-        for var in self.vars:
-            nsidx = var.name_space_index.value
-            var_name = var.variable_name.value
-
-            for alm in var.alarms.elements:
-                alm_name = alm.name.value
-                if not alm_name:
-                    log.warning(
-                        f"Alarm name is empty for variable {var_name}. Skipping alarm creation."
-                    )
-                    continue
-
-                slider = interactions[slider_name(nsidx, var_name, alm_name)]
-                high = alm.high_low.value == "High"
-
-                self.alarms[(nsidx, var_name, alm_name)] = create_alarm(
-                    self._passthrough,
-                    self._make_threshold(slider, high),
-                    self._make_alarm_callback(
-                        alm_name, "above" if high else "below", slider
-                    ),
-                    grace_period=alm.grace_period.value,
-                )
-
-    @staticmethod
-    async def _passthrough(value):
-        return value
-
-    @staticmethod
-    def _slider_level(slider):
-        # A slider the operator has never moved has no stored value, so reading
-        # it raises (AttributeError when no manager is attached, e.g. in tests).
-        # Fall back to its default (the midpoint of its range).
-        try:
-            return slider.value
-        except (KeyError, AttributeError):
-            return slider.default
-
-    def _make_threshold(self, slider, high: bool):
-        def threshold_met(value):
-            level = self._slider_level(slider)
-            if value is None or level is None or not isinstance(value, (int, float)):
-                return False
-            return value > level if high else value < level
-
-        return threshold_met
-
-    def _make_alarm_callback(self, alm_name: str, alert_txt: str, slider):
-        async def callback():
-            level = self._slider_level(slider)
-            message = f"Alert: {alm_name} is {alert_txt} {level}"
-            await self.create_message(
-                "notifications",
-                {"message": message, "severity": NOTIFICATION_SEVERITY_WARN},
-            )
-            log.info(f"ALARM: {message}")
-
-        return callback
-
-    async def get_server_values(self):
-        if self.server_uri is None:
-            log.error("No OPC UA URI provided in the configuration.")
-            return None
-
-        res = []
-        async with Client(url=self.server_uri) as client:
-            log.info("Connected to OPC UA Server at %s", self.server_uri)
-
-            objects = client.nodes.objects
-
-            for var in self.vars:
-                nsidx = var.name_space_index.value
-                var_name = var.variable_name.value
-                snsr_name = var.sensor_object_name.value
-
-                try:
-                    sensor_node = await objects.get_child([f"{nsidx}:{snsr_name}"])
-                    var_node = await sensor_node.get_child([f"{nsidx}:{var_name}"])
-                    value = await var_node.read_value()
-                    log.info("Value of %s: %s", var_name, value)
-                except Exception as e:
-                    log.error("Error reading variable %s: %s", var_name, e)
-                    value = None
-
-                res.append({"nsidx": nsidx, "var_name": var_name, "value": value})
-
-                for alm in var.alarms.elements:
-                    check_alarm = self.alarms.get((nsidx, var_name, alm.name.value))
-                    if check_alarm is not None:
-                        await check_alarm(value)
-
-        return res
+        now = time.time()
+        if now - self._last_ui_state_log >= UI_STATE_LOG_PERIOD_SECS:
+            self._last_ui_state_log = now
+            await self.create_message("ui_state", patch)

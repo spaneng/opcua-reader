@@ -1,9 +1,3 @@
-import random
-
-from pydoover.docker import Application, run_app
-from pydoover.config import Schema
-
-
 import asyncio
 import random
 import json
@@ -11,14 +5,11 @@ import logging
 from asyncua import Server, ua
 from pathlib import Path
 from pydoover import config
-from datetime import datetime, timezone
 
-log = logging.getLogger()
-
-class SimulatedOPCUAServer(Application):
+class SimulatedOPCUAServer:
     def __init__(self, config: config.Schema =None):
         self.config=config
-        self.endpoint = "opc.tcp://0.0.0.0:4840/" #self.config.opcua_uri.value or "opc.tcp://0.0.0.0:4840/"
+        self.endpoint = self.config.opcua_uri.value or "opc.tcp://0.0.0.0:4840/"
         self.server = Server()
         self.namespace_uri = "test"
         self.variables = {}
@@ -126,15 +117,14 @@ class SimulatedOPCUAServer(Application):
             await node.set_writable()
             self.variables[node] = f"{name}_{var} [TIMESTAMP]"
 
-    async def main_loop(self):
+
+    async def start(self):
         async with self.server:
             print(f"OPC UA Server running at {self.endpoint}")
-            tasks = []
-            tasks.append(asyncio.create_task(self._update_values()))
-            tasks.append(asyncio.create_task(self.test_alarm()))
-            # tasks.append(asyncio.create_task(self.test_report()))
-            
-            await asyncio.gather(*tasks)
+            task_1 = asyncio.create_task(self._update_values())
+            task_2 = asyncio.create_task(self.test_alarm())
+            task_3 = asyncio.create_task(self.test_report())
+            await asyncio.gather(task_1, task_2, task_3)
             # while True:
             #     await self._update_values()
             #     await asyncio.sleep(1)
@@ -144,7 +134,7 @@ class SimulatedOPCUAServer(Application):
             await asyncio.sleep(30)
             print("Alarm triggered for node:", self.test_alarm_node)
             await self.test_alarm_node.write_value(True)
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(5)
             await self.test_alarm_node.write_value(False)
             
     async def test_report(self):
@@ -157,9 +147,7 @@ class SimulatedOPCUAServer(Application):
         while True:
             print("Updating report values...")
             await asyncio.sleep(20)
-            # Get current UTC time in ISO 8601 format with "Z"
-            now_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-            await node.write_value(now_str)
+            await node.write_value(f"New Time {count}")
             await asyncio.sleep(2)
             
             count+= 1
@@ -192,24 +180,9 @@ class SimulatedOPCUAServer(Application):
             await asyncio.sleep(2)
 
 async def main():
-    server = SimulatedOPCUAServer(config=Schema())
+    server = SimulatedOPCUAServer()
     await server.setup()
-    await server.main_loop()
+    await server.start()
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# class SampleSimulator(Application):
-#     def setup(self):
-#         pass
-
-#     def main_loop(self):
-#         self.set_tag("random_value", random.randint(1, 100))
-
-
-# def main():
-#     """Run the sample simulator application."""
-#     run_app(SimulatedOPCUAServer(config=Schema()))
-
-# if __name__ == "__main__":
-#     main()

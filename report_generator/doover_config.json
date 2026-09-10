@@ -1,0 +1,25 @@
+{
+    "fuel_additive_report_generator": {
+        "id": 215991351634869518,
+        "name": "fuel_additive_report_generator",
+        "display_name": "Fuel Additive Reconciliation Report",
+        "type": "REP",
+        "visibility": "PUB",
+        "allow_many": true,
+        "description": "Daily reconciliation PDF report for fuel additive skids",
+        "long_description": "README.md",
+        "depends_on": [],
+        "organisation_id": 93957122026437134,
+        "export_ui_command": "NO_EXPORT",
+        "lambda_config": {
+            "Environment": {},
+            "Runtime": "python3.13",
+            "Timeout": 300,
+            "Handler": "src.fuel_additive_report.handler",
+            "MemorySize": 1024,
+            "Architectures": [
+                "arm64"
+            ]
+        }
+    }
+}

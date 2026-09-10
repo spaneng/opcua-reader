@@ -173,5 +173,10 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-*opcua_client.py
-*temp_client.py
+*DS_Store*
+
+
+# report generator build artifacts
+report_generator/packages_export/
+report_generator/package.zip
+report_generator/requirements.txt

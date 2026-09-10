@@ -1,40 +1,15 @@
 {
-  "opcua_address": "opc.tcp://localhost:4840/freeopcua/server/",
-  "opcua_server_values": [
-    {
-      "units": "°C",
-      "data_type": "Float",
-      "variable_name": "Temperature",
-      "variable_alarms": [
+    "opcua_address": "opc.tcp://localhost:4840",
+    "injectors": [
         {
-          "alarm_name": "LL",
-          "maximum_alarm_value": 100,
-          "minimum_alarm_value": 0,
-          "alarm_condition": "Low"
+            "injector_name": "Inj 1CX",
+            "injector_index": 1
         },
         {
-          "alarm_name": "HH",
-          "maximum_alarm_value": 100,
-          "minimum_alarm_value": 0,
-          "alarm_condition": "High"
-        },
-        {
-          "alarm_name": "H",
-          "maximum_alarm_value": 100,
-          "minimum_alarm_value": 0,
-          "alarm_condition": "High"
+            "injector_name": "Inj 2EQ",
+            "injector_index": 2
         }
-      ],
-      "name_space_index": "2",
-      "sensor_object_name": "TemperatureSensor"
-    },
-    {
-      "units": "mMol",
-      "data_type": "Float",
-      "variable_name": "OxygenLevel",
-      "variable_alarms": [],
-      "name_space_index": "2",
-      "sensor_object_name": "TemperatureSensor"
-    }
-  ]
-}
+    ],
+    "timezone": "Asia/Riyadh",
+    "report_restart_time": 0
+} 

@@ -1,64 +1,34 @@
+import enum
 from pathlib import Path
 
 from pydoover import config
 
 
-class AlarmConfig(config.Object):
-    name = config.String(
-        "Alarm Name",
-        description="Name of the alarm",
-    )
-    high_low = config.Enum(
-        "Alarm Condition",
-        description="High: value greater than limit, Low: value less than limit",
-        choices=["High", "Low"],
-        default=config.NotSet,
-    )
-    min_alarm = config.Number(
-        "Minimum Alarm Value",
-        description="Minimum value for the alarm to trigger",
-        default=0.0,
-    )
-    max_alarm = config.Number(
-        "Maximum Alarm Value",
-        description="Maximum value for the alarm to trigger",
-        default=100.0,
-    )
-    grace_period = config.Number(
-        "Grace Period (s)",
-        description="Duration threshold has to be met before calling alarm",
-        default=60 * 10.0,  # 10 minutes
-    )
+class Timezone(enum.Enum):
+    SYDNEY = "Australia/Sydney"
+    BRISBANE = "Australia/Brisbane"
+    MELBOURNE = "Australia/Melbourne"
+    PERTH = "Australia/Perth"
+    ADELAIDE = "Australia/Adelaide"
+    DARWIN = "Australia/Darwin"
+    HOBART = "Australia/Hobart"
+    RIYADH = "Asia/Riyadh"
+    DUBAI = "Asia/Dubai"
+    KUWAIT = "Asia/Kuwait"
+    BAHRAIN = "Asia/Bahrain"
+    OMAN = "Asia/Muscat"
+    QATAR = "Asia/Qatar"
+    KSA = "Asia/Riyadh"
 
 
-class OpcuaVariableConfig(config.Object):
-    name_space_index = config.String(
-        "Name Space Index",
-        description="Name Space Index of the OPC UA variable",
+class InjectorConfig(config.Object):
+    injector_name = config.String(
+        "Injector Name",
+        description="Name of the injector",
     )
-    variable_name = config.String(
-        "Variable Name",
-        description="Name of the OPC UA variable to read",
-    )
-    sensor_object_name = config.String(
-        "Sensor Object Name",
-        description="Name of the sensor object in the OPC UA server",
-    )
-    data_type = config.Enum(
-        "Data Type",
-        description="Data type of the OPC UA variable",
-        choices=["Int", "Float", "String", "Boolean"],
-        default=config.NotSet,
-    )
-    units = config.String(
-        "Units",
-        description="Unit of the OPC UA variable, e.g. '°C', 'V', 'm/s', etc",
-        default="",
-    )
-    alarms = config.Array(
-        "Variable Alarms",
-        description="Alarms associated with this OPC UA variable",
-        element=AlarmConfig("Alarm"),
+    injector_index = config.Integer(
+        "Injector Index",
+        description="Index of the injector, used for the OPC UA node names",
     )
 
 
@@ -67,16 +37,43 @@ class OpcuaReaderConfig(config.Schema):
         "OPCUA Address",
         description="OPC UA server URI, e.g. opc.tcp://localhost:4840/freeopcua/server/",
     )
-    opcua_values = config.Array(
-        "OPCUA Server Values", element=OpcuaVariableConfig("OPCUA Variable")
+    skid_name = config.String(
+        "Skid Name",
+        description=(
+            "Short site/skid code used to title the reconciliation report and "
+            "name its PDF, e.g. SJBP. Leave blank to use the app display name."
+        ),
+        default="",
+    )
+    tank_count = config.Integer(
+        "Number of Tanks",
+        description=(
+            "Number of additive storage tanks on the skid. A 'Level Tank N (%)' "
+            "reading is shown for each, read from the PLC's LevelTankN value."
+        ),
+        default=2,
+        minimum=1,
+        maximum=6,
+        name="tank_count",
+    )
+    injectors = config.Array(
+        "Injectors",
+        description="List of injectors, names MUST be unique",
+        element=InjectorConfig("Injector"),
+    )
+    timezone = config.String(
+        "Timezone",
+        description="Timezone of the report, e.g. America/New_York",
+        default=Timezone.RIYADH.value,
+    )
+    report_restart_time = config.Integer(
+        "Report Restart Time",
+        description="Time in Hrs to restart the report, 6=6am, 12=noon, 17=5pm etc.",
+        default=10,
     )
 
 
 def export():
     OpcuaReaderConfig.export(
-        Path(__file__).parents[2] / "doover_config.json", "opcua_reader"
+        Path(__file__).parents[2] / "doover_config.json", "fuel_additive_opcua_reader"
     )
-
-
-if __name__ == "__main__":
-    export()
