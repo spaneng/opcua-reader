@@ -14,20 +14,14 @@ log = logging.getLogger(__name__)
 REPORT_TIMEZONE = "Asia/Riyadh"
 
 
-def report_label(skid_name: str, day: datetime) -> str:
-    """The heading a report carries, e.g. ``SJBP - 12/09/26``.
+def report_filename(skid_name: str, day: datetime) -> str:
+    """The report's file name, e.g. ``SJBP_09-09-26.pdf``.
 
     ``day`` is the day being reported on, not the day the report ran - these
-    run after midnight, so the two differ.
-    """
-    return f"{skid_name} - {day:%d/%m/%y}"
+    run after midnight, so the two differ. The heading inside the PDF does not
+    repeat it; the report already has a Date field.
 
-
-def report_filename(skid_name: str, day: datetime) -> str:
-    """The label as a file name, e.g. ``SJBP_09-09-26.pdf``.
-
-    Built from the parts rather than from ``report_label`` because neither
-    separator in the label survives the trip:
+    Built from the parts because neither separator survives the trip:
 
     - "/" is a path separator, so it can be neither a file name nor an S3
       attachment key.
@@ -233,9 +227,8 @@ class FuelAdditiveReportGenerator(Application):
             or snapshot_skid_name
             or f"skid-{agent_id}"
         )
-        # Carried by both the heading and the file name, so a report that has
-        # been emailed on says which skid and which day without being opened.
-        context["report_label"] = report_label(context["skid_name"], day_start)
+        # The file name carries the day, so a report that has been emailed on
+        # says which skid and which day without being opened.
         context["report_day"] = day_start
         # "as at" the last reading that fed the report, not the run time.
         if last_update is not None:
