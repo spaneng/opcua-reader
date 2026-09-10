@@ -35,21 +35,45 @@ These are historical references, not active publication branches. The obsolete
 GitHub build/lint/test workflows are disabled; the new publisher runs only on
 `master` and writes only to the Doover registry and report Lambda.
 
-## Legacy image audit
+## Preserved legacy images
 
-Historical deployments reference `ghcr.io/spaneng/opcua-reader:fuel_additive` or
-`:dv1`. The `fuel_additive` tag was also overwritten by 2.0 branch builds. Do not
-assume its current digest contains compatible 1.0 code, and do not redeploy a
-legacy installation from it without verifying the image.
+Both historical image indexes were verified against embedded source-commit labels
+for Linux ARM64 and AMD64. They were copied without rebuilding any layers.
 
-The manual **Audit legacy images** workflow lists GHCR history using GitHub's
-short-lived package credential. It is read-only and saves its inventory as an
-artifact. Pin or restore an existing, verified compatible digest; do not rebuild
-old source against today's mutable base image and call it the historical image.
+| App | Source commit | Preserved GHCR tag |
+| --- | --- | --- |
+| Fuel additive 1.0 | `0a2c3340255f738b957cda29ebdfa9f104848902` | `legacy-fuel-additive-0a2c334` |
+| Generic OPCUA 1.0 | `e6f7e6571f503b3cc7d29792dfb1428b28fd8c2b` | `legacy-dv1-e6f7e65` |
 
-An app record's image reference is not proof of the digest running on a device.
-The old registry credential embedded in the inspected deployment could not
-authenticate during this audit. Existing containers were left untouched.
+Both tags are in `ghcr.io/spaneng/opcua-reader`. The legacy application records
+are now pinned to these immutable references:
+
+```text
+fuel_additive_opcua_reader:
+ghcr.io/spaneng/opcua-reader@sha256:10dda843ac2e5b62ec208abc0ba321b3ad91ac092123305b3d2fb5937cc77452
+
+opcua_reader:
+ghcr.io/spaneng/opcua-reader@sha256:6a88f7e6ffd5ec698c584eeba1653f0a77120e7c6c05a13bf125836376564b01
+```
+
+Existing deployment compose files still refer to `:fuel_additive` or `:dv1`.
+The former was restored to the verified 1.0 digest above; `:dv1` already matched.
+The displaced 2.0 image is preserved as `:archive-fuel-additive-cf0e6dd5a28c`.
+No current workflow writes these tags. Do not delete the legacy images while
+1.0 installations remain in service.
+
+The [preservation run](https://github.com/spaneng/opcua-reader/actions/runs/34430164248)
+verified the tags again after copying. Its one-time audit/repair workflow and
+script were removed afterward; they remain available in commit `91c1071`.
+
+No device was redeployed or restarted, and no site configuration, bridge,
+widget, email destination or schedule was changed. Image provenance establishes
+the historical published version, not the exact container digest or possible
+live edits on every device. Verify those before a future migration.
+
+The old registry credential embedded in the inspected deployment did not
+authenticate. Before any future legacy reinstall, validate its registry access;
+this consolidation did not replace device credentials.
 
 ## Other historical issues
 
